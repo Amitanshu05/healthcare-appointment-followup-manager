@@ -20,6 +20,8 @@ interface Doctor {
   name: string;
   specialty: string;
   contact: string;
+  email: string;
+  password: string;
   isAvailable: boolean;
   isOnLeave: boolean;
   slots: string[];
@@ -49,10 +51,10 @@ interface PatientUser {
 }
 
 const INITIAL_DOCTORS: Doctor[] = [
-  { id: 1, name: "Dr. Aarav Sharma", specialty: "Cardiologist", contact: "+91 98765 43210", isAvailable: true, isOnLeave: false, slots: ["10:00 AM", "11:30 AM", "02:00 PM"] },
-  { id: 2, name: "Dr. Priya Patel", specialty: "Dermatologist", contact: "+91 98765 43211", isAvailable: true, isOnLeave: false, slots: ["10:00 AM", "02:00 PM", "03:30 PM"] },
-  { id: 3, name: "Dr. Amit Verma", specialty: "Pediatrician", contact: "+91 98765 43212", isAvailable: true, isOnLeave: false, slots: ["11:30 AM", "03:30 PM"] },
-  { id: 4, name: "Dr. Neha Gupta", specialty: "General Physician", contact: "+91 98765 43213", isAvailable: false, isOnLeave: true, slots: ["10:00 AM", "11:30 AM"] }
+  { id: 1, name: "Dr. Aarav Sharma", specialty: "Cardiologist", contact: "+91 98765 43210", email: "aarav.sharma@hospital.com", password: "doctor123", isAvailable: true, isOnLeave: false, slots: ["10:00 AM", "11:30 AM", "02:00 PM"] },
+  { id: 2, name: "Dr. Priya Patel", specialty: "Dermatologist", contact: "+91 98765 43211", email: "priya.patel@hospital.com", password: "doctor123", isAvailable: true, isOnLeave: false, slots: ["10:00 AM", "02:00 PM", "03:30 PM"] },
+  { id: 3, name: "Dr. Amit Verma", specialty: "Pediatrician", contact: "+91 98765 43212", email: "amit.verma@hospital.com", password: "doctor123", isAvailable: true, isOnLeave: false, slots: ["11:30 AM", "03:30 PM"] },
+  { id: 4, name: "Dr. Neha Gupta", specialty: "General Physician", contact: "+91 98765 43213", email: "neha.gupta@hospital.com", password: "doctor123", isAvailable: false, isOnLeave: true, slots: ["10:00 AM", "11:30 AM"] }
 ];
 
 const INITIAL_APPOINTMENTS: Appointment[] = [
@@ -125,6 +127,8 @@ export default function App() {
   const [newDocName, setNewDocName] = useState('');
   const [newDocSpecialty, setNewDocSpecialty] = useState('');
   const [newDocContact, setNewDocContact] = useState('');
+  const [newDocEmail, setNewDocEmail] = useState('');
+  const [newDocPassword, setNewDocPassword] = useState('');
   const [adminMsg, setAdminMsg] = useState('');
 
   // Simulation flags
@@ -158,16 +162,13 @@ export default function App() {
     e.preventDefault();
     setAuthError('');
 
-    if (emailInput === 'admin@hospital.com' && passwordInput === 'admin123') {
+    if (emailInput === 'admin@caresync.com' && passwordInput === 'AdminCareSync2026') {
       setIsLoggedIn(true);
       setCurrentUser({ name: 'Hospital Administration', email: emailInput, role: 'admin' });
       return;
     }
 
-    const matchedDoctor = doctors.find(d => {
-      const formattedEmail = d.name.toLowerCase().replace("dr. ", "").replace(" ", ".") + "@hospital.com";
-      return emailInput === formattedEmail && passwordInput === 'doctor123';
-    });
+    const matchedDoctor = doctors.find(d => d.email === emailInput && d.password === passwordInput);
 
     if (matchedDoctor) {
       setIsLoggedIn(true);
@@ -370,8 +371,8 @@ export default function App() {
 
   const handleAdminAddDoctor = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newDocName || !newDocSpecialty || !newDocContact) {
-      setAdminMsg('All doctor details are required.');
+    if (!newDocName || !newDocSpecialty || !newDocContact || !newDocEmail || !newDocPassword) {
+      setAdminMsg('All doctor details (including email and password) are required.');
       return;
     }
 
@@ -380,6 +381,8 @@ export default function App() {
       name: newDocName.startsWith("Dr. ") ? newDocName : `Dr. ${newDocName}`,
       specialty: newDocSpecialty,
       contact: newDocContact,
+      email: newDocEmail,
+      password: newDocPassword,
       isAvailable: true,
       isOnLeave: false,
       slots: ["10:00 AM", "11:30 AM", "02:00 PM", "03:30 PM"]
@@ -389,6 +392,8 @@ export default function App() {
     setNewDocName('');
     setNewDocSpecialty('');
     setNewDocContact('');
+    setNewDocEmail('');
+    setNewDocPassword('');
     setAdminMsg('New doctor profile added successfully!');
     setTimeout(() => setAdminMsg(''), 4000);
   };
@@ -519,16 +524,6 @@ export default function App() {
                   Sign In
                 </button>
               </form>
-
-              <div className="mt-6 border-t border-slate-200 pt-4">
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Demo Accounts (Seeded)</span>
-                <div className="mt-2 space-y-1.5 text-xs text-slate-600">
-                  <p><strong className="text-slate-800">Hospital Admin:</strong> admin@hospital.com (Pass: admin123)</p>
-                  <p><strong className="text-slate-800">Doctor (Cardiology):</strong> aarav.sharma@hospital.com (Pass: doctor123)</p>
-                  <p><strong className="text-slate-800">Patient Client:</strong> rajesh@gmail.com (Pass: patient123)</p>
-                </div>
-              </div>
-
             </div>
           </div>
         )}
@@ -1014,7 +1009,7 @@ export default function App() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
               
               {/* Doctor Creation Form */}
-              <div className="lg:col-span-1 bg-white border border-slate-200 rounded-xl p-6 shadow-sm space-y-4 h-[420px]">
+              <div className="lg:col-span-1 bg-white border border-slate-200 rounded-xl p-6 shadow-sm space-y-4 h-[520px]">
                 <h3 className="text-base font-bold text-slate-950 flex items-center space-x-2 border-b border-slate-100 pb-2">
                   <PlusCircle className="h-5 w-5 text-blue-600" />
                   <span>Register New Doctor</span>
@@ -1057,6 +1052,30 @@ export default function App() {
                     />
                   </div>
 
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Email Address</label>
+                    <input 
+                      type="email" 
+                      required 
+                      value={newDocEmail}
+                      onChange={(e) => setNewDocEmail(e.target.value)}
+                      placeholder="e.g. rohan.k@hospital.com"
+                      className="mt-1 block w-full border border-slate-300 rounded-lg p-2 text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Login Password</label>
+                    <input 
+                      type="password" 
+                      required 
+                      value={newDocPassword}
+                      onChange={(e) => setNewDocPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="mt-1 block w-full border border-slate-300 rounded-lg p-2 text-sm"
+                    />
+                  </div>
+
                   {adminMsg && (
                     <div className="p-2 bg-green-50 border border-green-200 text-green-800 rounded-lg text-xs">
                       {adminMsg}
@@ -1073,7 +1092,7 @@ export default function App() {
               </div>
 
               {/* Doctors List & Leave Management (Scrollable Aligned) */}
-              <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden flex flex-col h-[420px]">
+              <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden flex flex-col h-[520px]">
                 <div className="px-6 py-4 border-b border-slate-200">
                   <h3 className="text-base font-bold text-slate-950">Manage Doctor Directory & Leave Status</h3>
                 </div>
