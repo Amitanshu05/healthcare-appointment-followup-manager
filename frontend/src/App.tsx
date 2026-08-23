@@ -98,20 +98,13 @@ export default function App() {
   const [contactInput, setContactInput] = useState('');
   const [authError, setAuthError] = useState('');
 
-  const [doctors, setDoctors] = useState<Doctor[]>(() => {
-    const saved = localStorage.getItem('hms_doctors');
-    return saved ? JSON.parse(saved) : INITIAL_DOCTORS;
-  });
-  const [appointments, setAppointments] = useState<Appointment[]>(() => {
-    const saved = localStorage.getItem('hms_appointments');
-    return saved ? JSON.parse(saved) : INITIAL_APPOINTMENTS;
-  });
-  const [patientsList, setPatientsList] = useState<PatientUser[]>(() => {
-    const saved = localStorage.getItem('hms_patients');
-    return saved ? JSON.parse(saved) : [
-      { name: "Rajesh Kumar", email: "rajesh@gmail.com", contact: "+91 99887 76655", passwordHash: "patient123" }
-    ];
-  });
+  const API_BASE = window.location.hostname === 'localhost'
+    ? 'http://localhost:8080'
+    : 'https://healthcare-manager-backend.onrender.com'; // Render backend URL
+
+  const [doctors, setDoctors] = useState<Doctor[]>(INITIAL_DOCTORS);
+  const [appointments, setAppointments] = useState<Appointment[]>(INITIAL_APPOINTMENTS);
+  const [patientsList, setPatientsList] = useState<PatientUser[]>([]);
 
   // Booking state variables
   const [selectedSpecialty, setSelectedSpecialty] = useState('');
@@ -146,47 +139,61 @@ export default function App() {
     }
   };
 
-  useEffect(() => {
-    localStorage.setItem('hms_doctors', JSON.stringify(doctors));
-  }, [doctors]);
+  // Load and refresh data from the centralized PostgreSQL database via API
+  const refreshData = async () => {
+    try {
+      const docRes = await fetch(`${API_BASE}/api/doctors`);
+      const docsData = await docRes.json();
+      setDoctors(docsData);
+
+      const apptRes = await fetch(`${API_BASE}/api/appointments`);
+      const apptsData = await apptRes.json();
+      setAppointments(apptsData);
+    } catch (err) {
+      console.warn("Backend API not reachable. Using memory cache fallback.", err);
+    }
+  };
 
   useEffect(() => {
-    localStorage.setItem('hms_appointments', JSON.stringify(appointments));
-  }, [appointments]);
+    refreshData();
+  }, []);
 
-  useEffect(() => {
-    localStorage.setItem('hms_patients', JSON.stringify(patientsList));
-  }, [patientsList]);
-
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError('');
 
-    if (emailInput === 'admin@caresync.com' && passwordInput === 'AdminCareSync2026') {
-      setIsLoggedIn(true);
-      setCurrentUser({ name: 'Hospital Administration', email: emailInput, role: 'admin' });
-      return;
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailInput, password: passwordInput })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setIsLoggedIn(true);
+        setCurrentUser({ name: data.name, email: data.email, role: data.role });
+        refreshData();
+      } else {
+        setAuthError(data.message || 'Invalid email or password');
+      }
+    } catch (err) {
+      // Graceful fallback for offline prototype testing on Vercel
+      if (emailInput === 'admin@caresync.com' && passwordInput === 'AdminCareSync2026') {
+        setIsLoggedIn(true);
+        setCurrentUser({ name: 'Hospital Administration', email: emailInput, role: 'admin' });
+        return;
+      }
+      const matchedDoctor = doctors.find(d => d.email === emailInput && d.password === passwordInput);
+      if (matchedDoctor) {
+        setIsLoggedIn(true);
+        setCurrentUser({ name: matchedDoctor.name, email: emailInput, role: 'doctor' });
+        return;
+      }
+      setAuthError('Connection to backend failed. Using local mockup accounts.');
     }
-
-    const matchedDoctor = doctors.find(d => d.email === emailInput && d.password === passwordInput);
-
-    if (matchedDoctor) {
-      setIsLoggedIn(true);
-      setCurrentUser({ name: matchedDoctor.name, email: emailInput, role: 'doctor' });
-      return;
-    }
-
-    const matchedPatient = patientsList.find(p => p.email === emailInput && p.passwordHash === passwordInput);
-    if (matchedPatient) {
-      setIsLoggedIn(true);
-      setCurrentUser({ name: matchedPatient.name, email: emailInput, role: 'patient' });
-      return;
-    }
-
-    setAuthError('Invalid email or password.');
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError('');
 
@@ -195,33 +202,49 @@ export default function App() {
       return;
     }
 
-    const emailExists = patientsList.some(p => p.email === emailInput);
-    if (emailExists || emailInput === 'admin@hospital.com') {
-      setAuthError('Email already registered.');
-      return;
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: nameInput, email: emailInput, contact: contactInput, password: passwordInput })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setIsLoggedIn(true);
+        setCurrentUser({ name: nameInput, email: emailInput, role: 'patient' });
+        refreshData();
+
+        sendEmailAlert(
+          emailInput,
+          'Welcome to CareSync Hospital!',
+          `Hello ${nameInput},\n\nYour patient account has been successfully registered under ${emailInput}!\n\nYou can now log in to schedule medical slot consultations, write down symptom profiles, and sync appointments with Google Calendar.\n\nBest regards,\nCareSync Hospital Admin Team`
+        );
+      } else {
+        setAuthError(data.message || 'Registration failed.');
+      }
+    } catch (err) {
+      // Local prototype register fallback
+      const newPatient: PatientUser = {
+        name: nameInput,
+        email: emailInput,
+        contact: contactInput,
+        passwordHash: passwordInput
+      };
+      setPatientsList([...patientsList, newPatient]);
+      setIsLoggedIn(true);
+      setCurrentUser({ name: newPatient.name, email: newPatient.email, role: 'patient' });
+
+      sendEmailAlert(
+        newPatient.email,
+        'Welcome to CareSync Hospital!',
+        `Hello ${newPatient.name},\n\nYour patient account has been successfully registered under ${newPatient.email}!\n\nYou can now log in to schedule medical slot consultations, write down symptom profiles, and sync appointments with Google Calendar.\n\nBest regards,\nCareSync Hospital Admin Team`
+      );
+
+      setNameInput('');
+      setEmailInput('');
+      setContactInput('');
+      setPasswordInput('');
     }
-
-    const newPatient: PatientUser = {
-      name: nameInput,
-      email: emailInput,
-      contact: contactInput,
-      passwordHash: passwordInput
-    };
-
-    setPatientsList([...patientsList, newPatient]);
-    setIsLoggedIn(true);
-    setCurrentUser({ name: newPatient.name, email: newPatient.email, role: 'patient' });
-
-    sendEmailAlert(
-      newPatient.email,
-      'Welcome to CareSync Hospital!',
-      `Hello ${newPatient.name},\n\nYour patient account has been successfully registered under ${newPatient.email}!\n\nYou can now log in to schedule medical slot consultations, write down symptom profiles, and sync appointments with Google Calendar.\n\nBest regards,\nCareSync Hospital Admin Team`
-    );
-
-    setNameInput('');
-    setEmailInput('');
-    setContactInput('');
-    setPasswordInput('');
   };
 
   const handleLogout = () => {
@@ -240,64 +263,99 @@ export default function App() {
 
   const selectedDoctorObj = doctors.find(d => d.id === selectedDoctorId);
 
-  const handleBooking = (e: React.FormEvent) => {
+  const handleBooking = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentUser || !selectedDoctorId || !selectedSlot || !problemDescription) {
       setBookingMsg({ text: 'Please fill all fields', type: 'error' });
       return;
     }
 
-    const doc = doctors.find(d => d.id === selectedDoctorId);
-    if (!doc) return;
-
-    const patientDetails = patientsList.find(p => p.email === currentUser.email);
-    const contact = patientDetails ? patientDetails.contact : "+91 99887 76655";
-
     setSyncingCalendar(true);
 
-    setTimeout(() => {
-      const newAppt: Appointment = {
-        id: Date.now(),
-        patientName: currentUser.name,
-        patientContact: contact,
-        doctorName: doc.name,
-        specialty: doc.specialty,
-        slotTime: `2026-08-25 ${selectedSlot}`,
-        problem: problemDescription,
-        status: 'booked',
-        createdAt: new Date().toLocaleString(),
-        calendarSynced: true
-      };
-
-      setAppointments([newAppt, ...appointments]);
+    try {
+      const res = await fetch(`${API_BASE}/api/appointments/book`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          patientEmail: currentUser.email,
+          doctorId: selectedDoctorId,
+          slotTime: selectedSlot,
+          problem: problemDescription
+        })
+      });
+      const data = await res.json();
       setSyncingCalendar(false);
-      setBookingMsg({ text: 'Booking completed & synced with Google Calendar!', type: 'success' });
 
-      sendEmailAlert(
-        currentUser.email,
-        'Appointment Booking Confirmed - CareSync Hospital',
-        `Hello ${currentUser.name},\n\nYour medical appointment has been successfully scheduled with ${doc.name} (${doc.specialty})!\n\nSlot Timing: 2026-08-25 ${selectedSlot}\nSymptom Chief Complaint: "${problemDescription}"\n\nA Google Calendar invitation has been automatically synced to both you and the specialist.\n\nBest regards,\nCareSync Scheduling Portal`
-      );
+      if (data.success) {
+        setBookingMsg({ text: 'Booking completed & synced with Google Calendar!', type: 'success' });
+        refreshData();
+        setSelectedSlot('');
+        setProblemDescription('');
 
-      setSelectedSlot('');
-      setProblemDescription('');
-      setTimeout(() => setBookingMsg({ text: '', type: '' }), 4000);
-    }, 1500);
-  };
-
-  const handleCancel = (id: number) => {
-    if (confirm("Cancel appointment? This will delete the Google Calendar event.")) {
-      const appt = appointments.find(a => a.id === id);
-      setAppointments(appointments.map(a => 
-        a.id === id ? { ...a, status: 'cancelled', calendarSynced: false } : a
-      ));
-
-      if (appt && currentUser) {
         sendEmailAlert(
           currentUser.email,
-          'Appointment Cancelled - CareSync Hospital',
-          `Hello ${appt.patientName},\n\nYour appointment with ${appt.doctorName} scheduled for ${appt.slotTime} has been successfully cancelled.\n\nThe corresponding Google Calendar event has been removed.\n\nBest regards,\nCareSync Scheduling Portal`
+          'Appointment Booking Confirmed - CareSync Hospital',
+          `Hello ${currentUser.name},\n\nYour medical appointment has been successfully scheduled!\n\nSlot Timing: 2026-08-25 ${selectedSlot}\nSymptom Chief Complaint: "${problemDescription}"\n\nA Google Calendar invitation has been automatically synced to both you and the specialist.\n\nBest regards,\nCareSync Scheduling Portal`
         );
+      } else {
+        setBookingMsg({ text: data.message || 'Booking failed', type: 'error' });
+      }
+    } catch (err) {
+      // Local fallback
+      const doc = doctors.find(d => d.id === selectedDoctorId);
+      if (!doc) return;
+      setTimeout(() => {
+        const newAppt: Appointment = {
+          id: Date.now(),
+          patientName: currentUser.name,
+          patientContact: "+91 99887 76655",
+          doctorName: doc.name,
+          specialty: doc.specialty,
+          slotTime: `2026-08-25 ${selectedSlot}`,
+          problem: problemDescription,
+          status: 'booked',
+          createdAt: new Date().toLocaleString(),
+          calendarSynced: true
+        };
+        setAppointments([newAppt, ...appointments]);
+        setSyncingCalendar(false);
+        setBookingMsg({ text: 'Booking completed & synced with Google Calendar!', type: 'success' });
+
+        sendEmailAlert(
+          currentUser.email,
+          'Appointment Booking Confirmed - CareSync Hospital',
+          `Hello ${currentUser.name},\n\nYour medical appointment has been successfully scheduled with ${doc.name} (${doc.specialty})!\n\nSlot Timing: 2026-08-25 ${selectedSlot}\nSymptom Chief Complaint: "${problemDescription}"\n\nA Google Calendar invitation has been automatically synced to both you and the specialist.\n\nBest regards,\nCareSync Scheduling Portal`
+        );
+
+        setSelectedSlot('');
+        setProblemDescription('');
+      }, 1000);
+    }
+  };
+
+  const handleCancel = async (id: number) => {
+    if (confirm("Cancel appointment? This will delete the Google Calendar event.")) {
+      try {
+        const res = await fetch(`${API_BASE}/api/appointments/${id}/cancel`, {
+          method: 'POST'
+        });
+        const data = await res.json();
+        if (data.success) {
+          refreshData();
+        }
+      } catch (err) {
+        // Local fallback
+        const appt = appointments.find(a => a.id === id);
+        setAppointments(appointments.map(a => 
+          a.id === id ? { ...a, status: 'cancelled', calendarSynced: false } : a
+        ));
+        if (appt && currentUser) {
+          sendEmailAlert(
+            currentUser.email,
+            'Appointment Cancelled - CareSync Hospital',
+            `Hello ${appt.patientName},\n\nYour appointment with ${appt.doctorName} scheduled for ${appt.slotTime} has been successfully cancelled.\n\nThe corresponding Google Calendar event has been removed.\n\nBest regards,\nCareSync Scheduling Portal`
+          );
+        }
       }
     }
   };
@@ -307,14 +365,12 @@ export default function App() {
     const defaultHead = "✨ AI Clinical Insights:\n";
     let formattedNotes = notes.trim();
 
-    // Custom translations and expansions for common inputs
     if (formattedNotes.toLowerCase().includes("rest krna") || formattedNotes.toLowerCase().includes("rest")) {
       formattedNotes = "Get sufficient bed rest. Avoid high physical activity.";
     }
     
     let adviceList = `• Advice: ${formattedNotes}`;
     
-    // Parse medications if they match keywords
     let medSchedule = "";
     if (notes.toLowerCase().includes("vitamin")) {
       medSchedule = "\n• Medication Schedule: Take Vitamin tablets once daily after meals.";
@@ -330,7 +386,7 @@ export default function App() {
     return `${defaultHead}${adviceList}${medSchedule}${followUp}${statusInfo}`;
   };
 
-  const handleCompleteWithPrescription = (id: number) => {
+  const handleCompleteWithPrescription = async (id: number) => {
     const rxText = activePrescriptionText[id] || '';
     if (!rxText.trim()) {
       alert("Please write clinical prescription notes first!");
@@ -338,91 +394,155 @@ export default function App() {
     }
 
     if (confirm("Complete appointment and send prescription details via email?")) {
-      // Run the Smart AI simulator to generate clinical insights
-      const aiSummarySim = getSmartAISummary(rxText);
-      const apptObj = appointments.find(a => a.id === id);
-      const patientDetails = patientsList.find(p => p.name === apptObj?.patientName);
-      const patientEmail = patientDetails ? patientDetails.email : 'vashishtharsh6@gmail.com';
+      try {
+        const res = await fetch(`${API_BASE}/api/appointments/${id}/complete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prescription: rxText })
+        });
+        const data = await res.json();
+        if (data.success) {
+          refreshData();
+          setActivePrescriptionText(prev => {
+            const copy = { ...prev };
+            delete copy[id];
+            return copy;
+          });
+        }
+      } catch (err) {
+        // Local fallback
+        const aiSummarySim = getSmartAISummary(rxText);
+        const apptObj = appointments.find(a => a.id === id);
+        const patientDetails = patientsList.find(p => p.name === apptObj?.patientName);
+        const patientEmail = patientDetails ? patientDetails.email : 'vashishtharsh6@gmail.com';
 
-      setAppointments(appointments.map(appt => 
-        appt.id === id ? { 
-          ...appt, 
-          status: 'completed', 
-          completedAt: new Date().toLocaleString(),
-          prescription: rxText,
-          aiPostSummary: aiSummarySim
-        } : appt
-      ));
+        setAppointments(appointments.map(appt => 
+          appt.id === id ? { 
+            ...appt, 
+            status: 'completed', 
+            completedAt: new Date().toLocaleString(),
+            prescription: rxText,
+            aiPostSummary: aiSummarySim
+          } : appt
+        ));
 
-      sendEmailAlert(
-        patientEmail,
-        'Consultation Completed & Prescription Details - CareSync Hospital',
-        `Hello ${apptObj?.patientName},\n\nYour consultation with ${apptObj?.doctorName} is completed!\n\nHere are the details:\n\n=== Doctor Diagnosis Notes ===\n${rxText}\n\n=== Patient Friendly AI Clinical Summary ===\n${aiSummarySim}\n\nThank you for choosing CareSync Hospital.\n\nBest regards,\nCareSync Care Team`
-      );
-      
-      // Clean input
-      setActivePrescriptionText(prev => {
-        const copy = { ...prev };
-        delete copy[id];
-        return copy;
-      });
+        sendEmailAlert(
+          patientEmail,
+          'Consultation Completed & Prescription Details - CareSync Hospital',
+          `Hello ${apptObj?.patientName},\n\nYour consultation with ${apptObj?.doctorName} is completed!\n\nHere are the details:\n\n=== Doctor Diagnosis Notes ===\n${rxText}\n\n=== Patient Friendly AI Clinical Summary ===\n${aiSummarySim}\n\nThank you for choosing CareSync Hospital.\n\nBest regards,\nCareSync Care Team`
+        );
+        
+        setActivePrescriptionText(prev => {
+          const copy = { ...prev };
+          delete copy[id];
+          return copy;
+        });
+      }
     }
   };
 
-  const handleAdminAddDoctor = (e: React.FormEvent) => {
+  const handleAdminAddDoctor = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newDocName || !newDocSpecialty || !newDocContact || !newDocEmail || !newDocPassword) {
       setAdminMsg('All doctor details (including email and password) are required.');
       return;
     }
 
-    const newDoc: Doctor = {
-      id: Date.now(),
-      name: newDocName.startsWith("Dr. ") ? newDocName : `Dr. ${newDocName}`,
-      specialty: newDocSpecialty,
-      contact: newDocContact,
-      email: newDocEmail,
-      password: newDocPassword,
-      isAvailable: true,
-      isOnLeave: false,
-      slots: ["10:00 AM", "11:30 AM", "02:00 PM", "03:30 PM"]
-    };
-
-    setDoctors([...doctors, newDoc]);
-    setNewDocName('');
-    setNewDocSpecialty('');
-    setNewDocContact('');
-    setNewDocEmail('');
-    setNewDocPassword('');
-    setAdminMsg('New doctor profile added successfully!');
-    setTimeout(() => setAdminMsg(''), 4000);
+    try {
+      const res = await fetch(`${API_BASE}/api/doctors/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newDocName,
+          specialty: newDocSpecialty,
+          contact: newDocContact,
+          email: newDocEmail,
+          password: newDocPassword
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setAdminMsg('New doctor profile added successfully!');
+        refreshData();
+        setNewDocName('');
+        setNewDocSpecialty('');
+        setNewDocContact('');
+        setNewDocEmail('');
+        setNewDocPassword('');
+      } else {
+        setAdminMsg(data.message || 'Failed to add doctor.');
+      }
+    } catch (err) {
+      // Local fallback
+      const newDoc: Doctor = {
+        id: Date.now(),
+        name: newDocName.startsWith("Dr. ") ? newDocName : `Dr. ${newDocName}`,
+        specialty: newDocSpecialty,
+        contact: newDocContact,
+        email: newDocEmail,
+        password: newDocPassword,
+        isAvailable: true,
+        isOnLeave: false,
+        slots: ["10:00 AM", "11:30 AM", "02:00 PM", "03:30 PM"]
+      };
+      setDoctors([...doctors, newDoc]);
+      setNewDocName('');
+      setNewDocSpecialty('');
+      setNewDocContact('');
+      setNewDocEmail('');
+      setNewDocPassword('');
+      setAdminMsg('New doctor profile added successfully!');
+    }
   };
 
-  const toggleDoctorLeave = (docId: number, currentLeaveStatus: boolean) => {
+  const toggleDoctorLeave = async (docId: number, currentLeaveStatus: boolean) => {
     const doc = doctors.find(d => d.id === docId);
     if (!doc) return;
 
     const actionText = currentLeaveStatus ? "Mark back on Duty?" : "Put on Leave? Existing active bookings will be cancelled and patients notified.";
     if (confirm(`${doc.name}: ${actionText}`)) {
-      setDoctors(doctors.map(d => 
-        d.id === docId ? { ...d, isOnLeave: !currentLeaveStatus, isAvailable: currentLeaveStatus } : d
-      ));
-
-      // Cancel affected appointments if doctor goes on leave
-      if (!currentLeaveStatus) {
-        setAppointments(appointments.map(appt => 
-          (appt.doctorName === doc.name && appt.status === 'booked')
-            ? { ...appt, status: 'cancelled', calendarSynced: false }
-            : appt
+      try {
+        const res = await fetch(`${API_BASE}/api/doctors/${docId}/leave`, {
+          method: 'POST'
+        });
+        const data = await res.json();
+        if (data.success) {
+          refreshData();
+        }
+      } catch (err) {
+        // Local fallback
+        setDoctors(doctors.map(d => 
+          d.id === docId ? { ...d, isOnLeave: !currentLeaveStatus, isAvailable: currentLeaveStatus } : d
         ));
+        if (!currentLeaveStatus) {
+          setAppointments(appointments.map(appt => 
+            (appt.doctorName === doc.name && appt.status === 'booked')
+              ? { ...appt, status: 'cancelled', calendarSynced: false }
+              : appt
+          ));
+        }
       }
     }
   };
 
-  const toggleDoctorDuty = (doctorName: string, currentStatus: boolean) => {
-    setDoctors(doctors.map(d => 
-      d.name === doctorName ? { ...d, isAvailable: !currentStatus } : d
-    ));
+  const toggleDoctorDuty = async (doctorName: string, currentStatus: boolean) => {
+    const doc = doctors.find(d => d.name === doctorName);
+    if (!doc) return;
+
+    try {
+      const res = await fetch(`${API_BASE}/api/doctors/${doc.id}/availability`, {
+        method: 'POST'
+      });
+      const data = await res.json();
+      if (data.success) {
+        refreshData();
+      }
+    } catch (err) {
+      // Local fallback
+      setDoctors(doctors.map(d => 
+        d.name === doctorName ? { ...d, isAvailable: !currentStatus } : d
+      ));
+    }
   };
 
   return (

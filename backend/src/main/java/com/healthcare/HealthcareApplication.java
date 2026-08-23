@@ -1,10 +1,69 @@
 package com.healthcare;
+
+import com.healthcare.entity.User;
+import com.healthcare.entity.Slot;
+import com.healthcare.repository.UserRepository;
+import com.healthcare.repository.SlotRepository;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+
+import java.util.List;
 
 @SpringBootApplication
 public class HealthcareApplication {
     public static void main(String[] args) {
         SpringApplication.run(HealthcareApplication.class, args);
+    }
+
+    @Bean
+    public CommandLineRunner initData(UserRepository userRepository, SlotRepository slotRepository) {
+        return args -> {
+            if (userRepository.count() == 0) {
+                // Seed Admin
+                User admin = new User();
+                admin.setName("Hospital Administration");
+                admin.setEmail("admin@caresync.com");
+                admin.setPasswordHash("AdminCareSync2026");
+                admin.setRole("admin");
+                admin.setContact("1234567890");
+                userRepository.save(admin);
+
+                // Seed Doctors
+                User doc1 = createDoctor("Dr. Aarav Sharma", "Cardiologist", "+91 98765 43210", "aarav.sharma@hospital.com", "doctor123");
+                User doc2 = createDoctor("Dr. Priya Patel", "Dermatologist", "+91 98765 43211", "priya.patel@hospital.com", "doctor123");
+                User doc3 = createDoctor("Dr. Amit Verma", "Pediatrician", "+91 98765 43212", "amit.verma@hospital.com", "doctor123");
+                User doc4 = createDoctor("Dr. Neha Gupta", "General Physician", "+91 98765 43213", "neha.gupta@hospital.com", "doctor123");
+                doc4.setAvailable(false);
+
+                userRepository.saveAll(List.of(doc1, doc2, doc3, doc4));
+
+                // Seed Slots
+                String[] times = {"10:00 AM", "11:30 AM", "02:00 PM", "03:30 PM"};
+                for (User doc : List.of(doc1, doc2, doc3, doc4)) {
+                    for (String time : times) {
+                        Slot slot = new Slot();
+                        slot.setDoctor(doc);
+                        slot.setSlotTime(time);
+                        slot.setBooked(false);
+                        slotRepository.save(slot);
+                    }
+                }
+                System.out.println("Demo database seeded successfully with Admin, Doctors, and Slots!");
+            }
+        };
+    }
+
+    private User createDoctor(String name, String specialty, String contact, String email, String password) {
+        User doc = new User();
+        doc.setName(name);
+        doc.setSpecialty(specialty);
+        doc.setContact(contact);
+        doc.setEmail(email);
+        doc.setPasswordHash(password); // Store password for simplified POC auth
+        doc.setRole("doctor");
+        doc.setAvailable(true);
+        return doc;
     }
 }
