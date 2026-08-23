@@ -2,7 +2,7 @@
 
 An enterprise-grade, full-stack healthcare appointment scheduling and follow-up platform built with a React 19 frontend and a Spring Boot (Java 21) backend. Features AI-powered clinical summaries, dynamic slot availability management, email notifications, and Google Calendar event synchronization.
 
-🚀 **Live Portal Link**: [https://healthcare-manager-vashisht29.vercel.app](https://healthcare-manager-vashisht29.vercel.app)
+🚀 **Live Portal Link**: [https://healthcare-manager-pi.vercel.app](https://healthcare-manager-pi.vercel.app)
 
 ---
 
