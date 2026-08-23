@@ -17,6 +17,7 @@ An enterprise-grade, full-stack healthcare appointment scheduling and follow-up 
 healthcare_manager/
 ├── docker-compose.yml           # Runs PostgreSQL database locally
 ├── README.md                    # Project documentation & design write-up
+├── run_full_system.sh           # Auto-launcher script (Port cleanup, JDK & Maven paths)
 ├── backend/
 │   ├── pom.xml                  # Maven dependencies configuration
 │   └── src/main/
@@ -50,29 +51,38 @@ To parse symptom urgency levels and generate clinical summaries:
 4. Provide credentials in application configuration. The backend will request permission on booking confirmation to automatically sync appointment events to both patient and doctor calendars.
 
 ### 3. SMTP Email Configuration (Reminders & Notifications)
-Configure SMTP settings in `application.yml` (using SendGrid, Mailgun, or standard Gmail SMTP):
-```yaml
-spring:
-  mail:
-    host: smtp.gmail.com
-    port: 587
-    username: ${SMTP_USERNAME}
-    password: ${SMTP_PASSWORD}
-    properties:
-      mail.smtp.auth: true
-      mail.smtp.starttls.enable: true
+Configure SMTP settings in `.env` (using SendGrid, Mailgun, or standard Gmail SMTP):
+```env
+SMTP_USERNAME=your_gmail@gmail.com
+SMTP_PASSWORD=your_google_app_password
 ```
 Used for booking confirmations, daily agenda updates, cancellations, and Quartz-scheduled medication frequency alerts.
 
 ---
 
-## 📖 System Design Write-Up
+## 📖 System Design Write-Up (800 Words Max)
 
-### 1. Double-Booking Prevention & Concurrency
-To safely handle simultaneous booking attempts for the same doctor slot, we implement a database-level optimistic locking mechanism combined with a unique index constraint. The `slots` table contains a unique compound index on `(doctor_id, slot_time)`. When booking, a database transaction attempts to write to the `appointments` table and updates `is_booked = TRUE` in the `slots` table. If two threads attempt to book the exact same slot concurrently, the database unique constraint throws an `IntegrityViolationException`, rollbacks the transaction, and safely rejects the second request.
+### 1. Double-Booking Prevention & Concurrency Control
+In a multi-user environment, simultaneous booking attempts for the same doctor and timeslot present a classic race condition. To solve this, we implement a multi-layered prevention mechanism:
+* **Database Constraints**: The `slots` table contains a unique compound key on `(doctor_id, slot_time)`. Additionally, the `appointments` table has a partial unique index on `(slot_id, status)` where `status = 'booked'`. This guarantees that the database itself physically blocks any duplicate records from committing.
+* **Hibernate Optimistic Locking**: The `slots` entity is annotated with `@Version`. When a transaction reads a slot to check availability, it reads the version number. When updating `is_booked = TRUE`, it checks if the version matches. If another thread committed first, a `OptimisticLockException` is thrown.
+* **Spring Boot Transactional Isolation**: The booking method is wrapped in `@Transactional(isolation = Isolation.READ_COMMITTED)`. If concurrent attempts happen, the second transaction catches the integrity violation exception and rollbacks cleanly, displaying a user-friendly alert: *"This slot has already been booked. Please choose another."*
 
 ### 2. Doctor Leave Conflict Handling
-When a doctor is marked as "On Leave" for a specific date range, a listener triggers in the system that retrieves all active appointments assigned to that doctor during the leave dates. These affected appointments are automatically transitioned to `cancelled` (with slot `is_booked` marked `FALSE`). The Quartz scheduler immediately spawns high-priority asynchronous tasks to notify the affected patients via SMTP email, providing options to reschedule.
+When a doctor is marked "On Leave" by the admin for a specific date range, the system must maintain scheduling integrity and notify affected patients:
+* **Cascade Cancellation**: A service listener queries all active appointments scheduled with the doctor during the leave duration. It marks these appointments as `cancelled` and marks their slots back to `is_booked = FALSE`.
+* **Asynchronous Alert Dispatching**: The cancellation process registers an asynchronous event. A background service fetches the patient and doctor details and pushes notification payloads to the Outbox repository.
+* **Patient Notification**: The Quartz Scheduler instantly picks up the outbox payloads and dispatches email notifications alerting patients of the cancellation, containing a direct link to reschedule.
 
-### 3. Notification Failure Handling & Retry Logic
-To ensure reliable delivery of calendar invitations and SMTP emails, a custom Quartz Scheduler job (`EmailRetryJob`) polls a local `outbox` table in the database. When an email fails to send due to network issues, it is saved in the outbox with a status of `PENDING` and a retry count of `0`. The background Quartz job triggers every 5 minutes, retrieves all pending emails, and retries the SMTP execution using exponential backoff up to 5 times.
+### 3. Temporary Slot Hold Mechanism
+To prevent a user from losing a slot while they are actively filling out the patient symptom form (which takes time), we implement a temporary slot hold mechanism:
+* **Redis/TTL Cache Locks**: When a user selects a timeslot and clicks "Start Booking", the system creates a temporary hold entry in the database/cache with a Time-To-Live (TTL) of 5 minutes: `slot_hold:{slot_id} = patient_id`.
+* **State Verification**: During this 5-minute window, the slot is marked as "On Hold" and is hidden from other patients.
+* **Auto-Release Lifecycle**: If the patient completes the symptom form and clicks "Confirm" within the TTL, the hold is upgraded to a permanent `booked` appointment. If the TTL expires, the key is automatically evicted, releasing the slot back into the available pool for other users.
+
+### 4. Notification Failure Handling & Retry Logic
+Network glitches or mail server outages must not result in lost notifications. We implement a local database Outbox Pattern:
+* **The Outbox Table**: When a notification is generated (email/calendar invite), the details are saved in the `outbox` table with status `PENDING` and `retry_count = 0`.
+* **Quartz Scheduler Engine**: A Quartz job (`EmailRetryJob`) triggers every 5 minutes, polling all `PENDING` or `FAILED` emails.
+* **Exponential Backoff**: If an email fail due to SMTP timeout, the system increments the retry count. It schedules the next retry using exponential backoff: $Delay = 2^{retry\_count} \times 2\text{ minutes}$.
+* **Dead Letter Queue (DLQ)**: If a notification fails 5 consecutive times, it is moved to `DLQ` status for administrator audit logs, preventing database connection overhead.
