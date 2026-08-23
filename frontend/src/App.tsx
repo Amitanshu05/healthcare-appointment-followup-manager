@@ -1,13 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { 
   User, 
-  UserCheck, 
-  ShieldAlert, 
   Calendar, 
   Clock, 
   Activity, 
-  CheckCircle, 
-  XCircle, 
   Users, 
   Database,
   Lock,
@@ -16,8 +12,7 @@ import {
   LogOut,
   Check,
   FileText,
-  PlusCircle,
-  AlertTriangle
+  PlusCircle
 } from 'lucide-react';
 
 interface Doctor {
@@ -373,9 +368,14 @@ export default function App() {
             ? { ...appt, status: 'cancelled', calendarSynced: false }
             : appt
         ));
-        alert(`All active bookings for ${doc.name} have been cancelled. Quartz job spawned SMTP cancellation notifications to patients.`);
       }
     }
+  };
+
+  const toggleDoctorDuty = (doctorName: string, currentStatus: boolean) => {
+    setDoctors(doctors.map(d => 
+      d.name === doctorName ? { ...d, isAvailable: !currentStatus } : d
+    ));
   };
 
   return (
