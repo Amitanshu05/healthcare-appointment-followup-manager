@@ -130,6 +130,18 @@ export default function App() {
   // Simulation flags
   const [syncingCalendar, setSyncingCalendar] = useState(false);
 
+  const sendEmailAlert = async (to: string, subject: string, body: string) => {
+    try {
+      await fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to, subject, body })
+      });
+    } catch (err) {
+      console.warn("Mail dispatch error or offline mode:", err);
+    }
+  };
+
   useEffect(() => {
     localStorage.setItem('hms_doctors', JSON.stringify(doctors));
   }, [doctors]);
@@ -199,6 +211,12 @@ export default function App() {
     setIsLoggedIn(true);
     setCurrentUser({ name: newPatient.name, email: newPatient.email, role: 'patient' });
 
+    sendEmailAlert(
+      newPatient.email,
+      'Welcome to CareSync Hospital!',
+      `Hello ${newPatient.name},\n\nYour patient account has been successfully registered under ${newPatient.email}!\n\nYou can now log in to schedule medical slot consultations, write down symptom profiles, and sync appointments with Google Calendar.\n\nBest regards,\nCareSync Hospital Admin Team`
+    );
+
     setNameInput('');
     setEmailInput('');
     setContactInput('');
@@ -254,6 +272,12 @@ export default function App() {
       setSyncingCalendar(false);
       setBookingMsg({ text: 'Booking completed & synced with Google Calendar!', type: 'success' });
 
+      sendEmailAlert(
+        currentUser.email,
+        'Appointment Booking Confirmed - CareSync Hospital',
+        `Hello ${currentUser.name},\n\nYour medical appointment has been successfully scheduled with ${doc.name} (${doc.specialty})!\n\nSlot Timing: 2026-08-25 ${selectedSlot}\nSymptom Chief Complaint: "${problemDescription}"\n\nA Google Calendar invitation has been automatically synced to both you and the specialist.\n\nBest regards,\nCareSync Scheduling Portal`
+      );
+
       setSelectedSlot('');
       setProblemDescription('');
       setTimeout(() => setBookingMsg({ text: '', type: '' }), 4000);
@@ -262,9 +286,18 @@ export default function App() {
 
   const handleCancel = (id: number) => {
     if (confirm("Cancel appointment? This will delete the Google Calendar event.")) {
-      setAppointments(appointments.map(appt => 
-        appt.id === id ? { ...appt, status: 'cancelled', calendarSynced: false } : appt
+      const appt = appointments.find(a => a.id === id);
+      setAppointments(appointments.map(a => 
+        a.id === id ? { ...a, status: 'cancelled', calendarSynced: false } : a
       ));
+
+      if (appt && currentUser) {
+        sendEmailAlert(
+          currentUser.email,
+          'Appointment Cancelled - CareSync Hospital',
+          `Hello ${appt.patientName},\n\nYour appointment with ${appt.doctorName} scheduled for ${appt.slotTime} has been successfully cancelled.\n\nThe corresponding Google Calendar event has been removed.\n\nBest regards,\nCareSync Scheduling Portal`
+        );
+      }
     }
   };
 
@@ -306,6 +339,9 @@ export default function App() {
     if (confirm("Complete appointment and send prescription details via email?")) {
       // Run the Smart AI simulator to generate clinical insights
       const aiSummarySim = getSmartAISummary(rxText);
+      const apptObj = appointments.find(a => a.id === id);
+      const patientDetails = patientsList.find(p => p.name === apptObj?.patientName);
+      const patientEmail = patientDetails ? patientDetails.email : 'vashishtharsh6@gmail.com';
 
       setAppointments(appointments.map(appt => 
         appt.id === id ? { 
@@ -316,6 +352,12 @@ export default function App() {
           aiPostSummary: aiSummarySim
         } : appt
       ));
+
+      sendEmailAlert(
+        patientEmail,
+        'Consultation Completed & Prescription Details - CareSync Hospital',
+        `Hello ${apptObj?.patientName},\n\nYour consultation with ${apptObj?.doctorName} is completed!\n\nHere are the details:\n\n=== Doctor Diagnosis Notes ===\n${rxText}\n\n=== Patient Friendly AI Clinical Summary ===\n${aiSummarySim}\n\nThank you for choosing CareSync Hospital.\n\nBest regards,\nCareSync Care Team`
+      );
       
       // Clean input
       setActivePrescriptionText(prev => {
