@@ -720,7 +720,7 @@ export default function App() {
                           )}
 
                           {appt.aiPostSummary && (
-                            <div className="text-xs text-slate-650 bg-blue-50/50 p-2.5 rounded border border-blue-100 whitespace-pre-line leading-relaxed">
+                            <div className="text-xs text-slate-655 bg-blue-50/50 p-2.5 rounded border border-blue-100 whitespace-pre-line leading-relaxed">
                               {appt.aiPostSummary}
                             </div>
                           )}
@@ -808,11 +808,11 @@ export default function App() {
                   <div key={doc.id} className="p-4 border border-slate-200 rounded-xl flex flex-col justify-between space-y-3 bg-slate-50/50">
                     <div>
                       <span className="block font-bold text-slate-900 text-sm">{doc.name}</span>
-                      <span className="block text-xs text-slate-500 font-semibold">{doc.specialty}</span>
+                      <span className="block text-xs text-slate-550 font-semibold">{doc.specialty}</span>
                       <span className="block text-xs text-slate-400 mt-1">{doc.contact}</span>
                     </div>
                     <div className="flex justify-between items-center pt-2 border-t border-slate-100">
-                      <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold border ${doc.isOnLeave ? 'bg-red-50 text-red-750 border-red-200' : doc.isAvailable ? 'bg-green-50 text-green-750 border-green-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
+                      <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold border ${doc.isOnLeave ? 'bg-red-50 text-red-755 border-red-200' : doc.isAvailable ? 'bg-green-50 text-green-755 border-green-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
                         {doc.isOnLeave ? 'On Leave' : doc.isAvailable ? 'Available' : 'Away'}
                       </span>
                     </div>
@@ -836,7 +836,7 @@ export default function App() {
               <div className="flex items-center space-x-3 bg-slate-50 p-4 border border-slate-200 rounded-xl">
                 <div className="flex-grow pr-2">
                   <span className="block text-sm font-semibold text-slate-800">Duty Status</span>
-                  <span className="text-xs text-slate-500">
+                  <span className="text-xs text-slate-505 font-medium">
                     {doctors.find(d => d.name === currentUser.name)?.isAvailable ? 'Accepting Appointments' : 'Away / Offline'}
                   </span>
                 </div>
@@ -875,7 +875,7 @@ export default function App() {
                         {appointments.filter(a => a.doctorName === currentUser.name).map(appt => (
                           <tr key={appt.id} className="hover:bg-slate-50/50">
                             <td className="px-4 py-4">
-                              <span className="block font-bold text-slate-950">{appt.patientName}</span>
+                              <span className="block font-bold text-slate-955">{appt.patientName}</span>
                               <span className="block text-xs text-slate-550">{appt.patientContact}</span>
                             </td>
                             <td className="px-4 py-4 font-semibold text-slate-700">{appt.slotTime}</td>
@@ -914,8 +914,8 @@ export default function App() {
                             <td className="px-4 py-4 text-right space-x-2 whitespace-nowrap">
                               {appt.status === 'booked' && (
                                 <>
-                                  <button onClick={() => handleCompleteWithPrescription(appt.id)} className="text-xs font-bold text-green-650 hover:text-green-950 border border-green-200 px-2 py-1 bg-green-50 rounded">Complete</button>
-                                  <button onClick={() => handleCancel(appt.id)} className="text-xs font-bold text-red-650 hover:text-red-950">Cancel</button>
+                                  <button onClick={() => handleCompleteWithPrescription(appt.id)} className="text-xs font-bold text-green-650 hover:text-green-955 border border-green-200 px-2 py-1 bg-green-50 rounded">Complete</button>
+                                  <button onClick={() => handleCancel(appt.id)} className="text-xs font-bold text-red-650 hover:text-red-955">Cancel</button>
                                 </>
                               )}
                             </td>
@@ -1052,9 +1052,9 @@ export default function App() {
                           <tr key={doc.id} className="hover:bg-slate-50/50">
                             <td className="px-4 py-4 font-bold text-slate-950">{doc.name}</td>
                             <td className="px-4 py-4 text-slate-600 font-semibold">{doc.specialty}</td>
-                            <td className="px-4 py-4 text-slate-500">{doc.contact}</td>
+                            <td className="px-4 py-4 text-slate-505">{doc.contact}</td>
                             <td className="px-4 py-4">
-                              <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold border ${doc.isOnLeave ? 'bg-red-50 text-red-750 border-red-200' : doc.isAvailable ? 'bg-green-50 text-green-750 border-green-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
+                              <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold border ${doc.isOnLeave ? 'bg-red-50 text-red-755 border-red-200' : doc.isAvailable ? 'bg-green-50 text-green-755 border-green-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
                                 {doc.isOnLeave ? 'On Leave' : doc.isAvailable ? 'Available' : 'Away'}
                               </span>
                             </td>
@@ -1076,24 +1076,24 @@ export default function App() {
 
             </div>
 
-            {/* Master Log Entries */}
-            <div className="bg-white border border-slate-200 rounded-xl shadow-sm">
+            {/* Master Log Entries (Now Scrollable Vertically too!) */}
+            <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden flex flex-col h-[400px]">
               <div className="px-6 py-4 border-b border-slate-200 bg-slate-55 flex justify-between items-center">
                 <h3 className="text-base font-bold text-slate-950">Master Booking Mapping Logs (Audit Trail)</h3>
               </div>
-              <div className="p-6">
+              <div className="p-6 overflow-y-auto flex-grow">
                 {appointments.length > 0 ? (
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-slate-200 text-sm text-left">
-                      <thead className="bg-slate-50 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      <thead className="bg-slate-50 text-xs font-bold text-slate-500 uppercase tracking-wider sticky top-0 z-10">
                         <tr>
-                          <th className="px-4 py-3">Patient Detail</th>
-                          <th className="px-4 py-3">Assigned Doctor</th>
-                          <th className="px-4 py-3">Consultation Slot</th>
-                          <th className="px-4 py-3">Booking Date</th>
-                          <th className="px-4 py-3">Google Calendar</th>
-                          <th className="px-4 py-3">Status</th>
-                          <th className="px-4 py-3 text-right">Actions</th>
+                          <th className="px-4 py-3 bg-slate-50">Patient Detail</th>
+                          <th className="px-4 py-3 bg-slate-50">Assigned Doctor</th>
+                          <th className="px-4 py-3 bg-slate-50">Consultation Slot</th>
+                          <th className="px-4 py-3 bg-slate-50">Booking Date</th>
+                          <th className="px-4 py-3 bg-slate-50">Google Calendar</th>
+                          <th className="px-4 py-3 bg-slate-50">Status</th>
+                          <th className="px-4 py-3 bg-slate-50 text-right">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-200">
@@ -1145,7 +1145,7 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-400">
+      <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-450">
         &copy; 2026 CareSync Hospital - Clinical Appointment & Follow-up Manager
       </footer>
 
