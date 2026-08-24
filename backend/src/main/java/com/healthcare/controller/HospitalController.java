@@ -43,7 +43,7 @@ public class HospitalController {
     private String mailPassword;
 
     // Helper: Dispatch emails via Vercel serverless proxy to bypass Render Free Tier SMTP port blocking
-    private void sendEmail(String to, String subject, String htmlContent) {
+    private void sendEmail(String to, String subject, String htmlContent, String icsContent) {
         new Thread(() -> {
             try {
                 org.springframework.web.client.RestTemplate restTemplate = new org.springframework.web.client.RestTemplate();
@@ -53,6 +53,9 @@ public class HospitalController {
                 request.put("html", htmlContent);
                 request.put("smtpUser", mailFrom);
                 request.put("smtpPass", mailPassword);
+                if (icsContent != null) {
+                    request.put("ical", icsContent);
+                }
 
                 String vercelUrl = "https://healthcare-manager-pi.vercel.app/api/send-email";
                 restTemplate.postForObject(vercelUrl, request, String.class);
@@ -61,6 +64,10 @@ public class HospitalController {
                 System.err.println("Email dispatch via Vercel proxy failed: " + e.getMessage());
             }
         }).start();
+    }
+
+    private void sendEmail(String to, String subject, String htmlContent) {
+        sendEmail(to, subject, htmlContent, null);
     }
 
     // Helper: Wrap email messages in a highly professional, caring HTML layout
@@ -104,6 +111,52 @@ public class HospitalController {
                "  </div>" +
                "</body>" +
                "</html>";
+    }
+
+    // Helper: Generate professional standard iCalendar (.ics) event string with 15-minute active reminder
+    private String generateIcsContent(Appointment appt, String method) {
+        try {
+            String slotTime = appt.getSlot().getSlotTime(); // e.g., "2026-08-25 10:00 AM"
+            java.time.format.DateTimeFormatter inputFormatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm a", java.util.Locale.ENGLISH);
+            java.time.LocalDateTime localDateTime = java.time.LocalDateTime.parse(slotTime, inputFormatter);
+
+            // Assume local timezone is Asia/Kolkata (IST, +05:30) and convert to UTC
+            java.time.ZonedDateTime localZone = localDateTime.atZone(java.time.ZoneId.of("Asia/Kolkata"));
+            java.time.ZonedDateTime utcZone = localZone.withZoneSameInstant(java.time.ZoneId.of("UTC"));
+
+            java.time.format.DateTimeFormatter icsFormatter = java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'");
+            String dtStart = utcZone.format(icsFormatter);
+            String dtEnd = utcZone.plusMinutes(30).format(icsFormatter); // 30 minutes consultation duration
+            String dtStamp = java.time.ZonedDateTime.now(java.time.ZoneId.of("UTC")).format(icsFormatter);
+
+            String uid = "appt-" + appt.getId() + "@caresync.com";
+
+            return "BEGIN:VCALENDAR\r\n" +
+                   "VERSION:2.0\r\n" +
+                   "PRODID:-//CareSync Hospital//Appointment//EN\r\n" +
+                   "METHOD:" + method + "\r\n" +
+                   "BEGIN:VEVENT\r\n" +
+                   "UID:" + uid + "\r\n" +
+                   "SEQUENCE:0\r\n" +
+                   "STATUS:CONFIRMED\r\n" +
+                   "DTSTAMP:" + dtStamp + "\r\n" +
+                   "DTSTART:" + dtStart + "\r\n" +
+                   "DTEND:" + dtEnd + "\r\n" +
+                   "SUMMARY:Medical Appointment - " + appt.getDoctor().getName() + "\r\n" +
+                   "DESCRIPTION:Consultation with " + appt.getDoctor().getName() + " (" + appt.getDoctor().getSpecialty() + ") for problem: " + appt.getProblemDescription() + "\r\n" +
+                   "ORGANIZER;CN=CareSync Hospital:MAILTO:" + mailFrom + "\r\n" +
+                   "ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE;CN=" + appt.getPatient().getName() + ":MAILTO:" + appt.getPatient().getEmail() + "\r\n" +
+                   "BEGIN:VALARM\r\n" +
+                   "TRIGGER:-PT15M\r\n" +
+                   "ACTION:DISPLAY\r\n" +
+                   "DESCRIPTION:Reminder: Your medical appointment is in 15 minutes.\r\n" +
+                   "END:VALARM\r\n" +
+                   "END:VEVENT\r\n" +
+                   "END:VCALENDAR";
+        } catch (Exception e) {
+            System.err.println("Failed to generate ICS content: " + e.getMessage());
+            return null;
+        }
     }
 
     // 1. Authenticate logins (Admin, Doctor, Patient)
@@ -386,10 +439,12 @@ public class HospitalController {
                              "<p>A Google Calendar invitation has been automatically synced to your email. Please ensure you are logged into your portal dashboard a few minutes before the slot starts.</p>" +
                              "<p class='sweet-note'>Wishing you a swift and comfortable recovery,<br><strong>CareSync Scheduling Team</strong></p>";
 
+        String icsContent = generateIcsContent(appt, "REQUEST");
         sendEmail(
             patientEmail,
             "Appointment Booking Confirmed - CareSync Hospital",
-            getEmailHtmlWrapper("Booking Confirmation", "Your Appointment is Confirmed", confirmBody)
+            getEmailHtmlWrapper("Booking Confirmation", "Your Appointment is Confirmed", confirmBody),
+            icsContent
         );
 
         response.put("success", true);

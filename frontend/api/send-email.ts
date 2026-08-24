@@ -19,7 +19,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { to, subject, body, html } = req.body;
+  const { to, subject, body, html, ical } = req.body;
 
   if (!to || !subject || (!body && !html)) {
     return res.status(400).json({ error: 'Missing required fields' });
@@ -46,6 +46,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       subject,
       text: body || '',
       html: html || body || '',
+      ...(ical ? {
+        icalEvent: {
+          filename: 'invite.ics',
+          method: 'REQUEST',
+          content: ical,
+        }
+      } : {})
     });
     return res.status(200).json({ success: true });
   } catch (error: any) {
