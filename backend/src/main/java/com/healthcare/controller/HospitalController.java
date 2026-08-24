@@ -375,6 +375,7 @@ public class HospitalController {
         map.put("prescription", appt.getPrescription());
         map.put("aiPostSummary", appt.getPostVisitSummary());
         map.put("calendarSynced", appt.getStatus().equals("booked"));
+        map.put("createdAt", appt.getCreatedAt() != null ? appt.getCreatedAt().toString().replace("T", " ").substring(0, 16) : "");
         return map;
     }
 

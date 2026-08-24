@@ -43,7 +43,10 @@ public class HealthcareApplication {
                 userRepository.saveAll(List.of(doc1, doc2, doc3, doc4));
 
                 // Seed Slots
-                String[] times = {"10:00 AM", "11:30 AM", "02:00 PM", "03:30 PM"};
+                String[] times = {
+                    "2026-08-25 10:00 AM", "2026-08-25 11:30 AM", "2026-08-25 02:00 PM", "2026-08-25 03:30 PM",
+                    "2026-08-26 10:00 AM", "2026-08-26 11:30 AM", "2026-08-26 02:00 PM", "2026-08-26 03:30 PM"
+                };
                 for (User doc : List.of(doc1, doc2, doc3, doc4)) {
                     for (String time : times) {
                         Slot slot = new Slot();
@@ -54,6 +57,30 @@ public class HealthcareApplication {
                     }
                 }
                 System.out.println("Demo doctors and slots seeded successfully!");
+            }
+
+            // Force re-seeding of slots if they are in the old time-only format
+            if (slotRepository.count() > 0) {
+                Slot sample = slotRepository.findAll().get(0);
+                if (!sample.getSlotTime().startsWith("2026")) {
+                    slotRepository.deleteAll();
+                    System.out.println("Old slots deleted. Re-seeding slots with Date & Time...");
+                    List<User> docs = userRepository.findByRole("doctor");
+                    String[] times = {
+                        "2026-08-25 10:00 AM", "2026-08-25 11:30 AM", "2026-08-25 02:00 PM", "2026-08-25 03:30 PM",
+                        "2026-08-26 10:00 AM", "2026-08-26 11:30 AM", "2026-08-26 02:00 PM", "2026-08-26 03:30 PM"
+                    };
+                    for (User doc : docs) {
+                        for (String time : times) {
+                            Slot slot = new Slot();
+                            slot.setDoctor(doc);
+                            slot.setSlotTime(time);
+                            slot.setBooked(false);
+                            slotRepository.save(slot);
+                        }
+                    }
+                    System.out.println("Slots successfully re-seeded with Date & Time!");
+                }
             }
         };
     }
