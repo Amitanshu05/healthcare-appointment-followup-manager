@@ -20,7 +20,7 @@ public class HealthcareApplication {
     @Bean
     public CommandLineRunner initData(UserRepository userRepository, SlotRepository slotRepository) {
         return args -> {
-            if (userRepository.count() == 0) {
+            if (userRepository.findByEmail("admin@caresync.com").isEmpty()) {
                 // Seed Admin
                 User admin = new User();
                 admin.setName("Hospital Administration");
@@ -29,7 +29,10 @@ public class HealthcareApplication {
                 admin.setRole("admin");
                 admin.setContact("1234567890");
                 userRepository.save(admin);
+                System.out.println("Admin account seeded successfully!");
+            }
 
+            if (userRepository.findByRole("doctor").isEmpty()) {
                 // Seed Doctors
                 User doc1 = createDoctor("Dr. Aarav Sharma", "Cardiologist", "+91 98765 43210", "aarav.sharma@hospital.com", "doctor123");
                 User doc2 = createDoctor("Dr. Priya Patel", "Dermatologist", "+91 98765 43211", "priya.patel@hospital.com", "doctor123");
@@ -50,7 +53,7 @@ public class HealthcareApplication {
                         slotRepository.save(slot);
                     }
                 }
-                System.out.println("Demo database seeded successfully with Admin, Doctors, and Slots!");
+                System.out.println("Demo doctors and slots seeded successfully!");
             }
         };
     }
