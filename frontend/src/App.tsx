@@ -143,12 +143,20 @@ export default function App() {
   const refreshData = async () => {
     try {
       const docRes = await fetch(`${API_BASE}/api/doctors`);
-      const docsData = await docRes.json();
-      setDoctors(docsData);
+      if (docRes.ok) {
+        const docsData = await docRes.json();
+        if (Array.isArray(docsData)) {
+          setDoctors(docsData);
+        }
+      }
 
       const apptRes = await fetch(`${API_BASE}/api/appointments`);
-      const apptsData = await apptRes.json();
-      setAppointments(apptsData);
+      if (apptRes.ok) {
+        const apptsData = await apptRes.json();
+        if (Array.isArray(apptsData)) {
+          setAppointments(apptsData);
+        }
+      }
     } catch (err) {
       console.warn("Backend API not reachable. Using memory cache fallback.", err);
     }
