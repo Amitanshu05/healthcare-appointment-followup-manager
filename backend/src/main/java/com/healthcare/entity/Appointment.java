@@ -28,8 +28,8 @@ public class Appointment {
     @Column(nullable = false)
     private String status = "booked"; // 'booked', 'cancelled', 'completed'
 
-    @Column(name = "created_at", insertable = false, updatable = false)
-    private LocalDateTime createdAt;
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
