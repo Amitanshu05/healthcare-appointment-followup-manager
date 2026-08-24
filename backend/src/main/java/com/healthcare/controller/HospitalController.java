@@ -516,11 +516,20 @@ public class HospitalController {
         String otp = String.format("%06d", new Random().nextInt(1000000));
         otpStore.put(email, otp);
 
-        // Send OTP via asynchronous background thread
+        // Send OTP via HTML email (HTML)
+        String otpBody = "<p>Hello <strong>" + userOpt.get().getName() + "</strong>,</p>" +
+                         "<p>We received a request to reset your CareSync Hospital account password. Please use the verification code below to set a new password.</p>" +
+                         "<div class='card' style='text-align: center; border-left-color: #F59E0B; background-color: #FEF3C7;'>" +
+                         "  <p style='font-size: 14px; margin: 0; color: #78350F; font-weight: 500;'>YOUR VERIFICATION CODE</p>" +
+                         "  <h1 style='font-size: 36px; margin: 10px 0 0 0; color: #D97706; letter-spacing: 4px; font-weight: 800;'>" + otp + "</h1>" +
+                         "</div>" +
+                         "<p>If you did not make this request, you can safely ignore this email. Your current password will remain unchanged.</p>" +
+                         "<p class='sweet-note'>Stay secure,<br><strong>CareSync Security & Privacy Team</strong></p>";
+
         sendEmail(
             email,
             "CareSync Password Reset Verification Code",
-            "Hello " + userOpt.get().getName() + ",\n\nWe received a request to reset your CareSync Hospital account password.\n\nYour unique 6-digit OTP verification code is:\n\n👉 " + otp + "\n\nPlease enter this code on the reset screen to change your password.\n\nBest regards,\nCareSync Security Team"
+            getEmailHtmlWrapper("Security Code", "Password Reset Request", otpBody)
         );
 
         response.put("success", true);
