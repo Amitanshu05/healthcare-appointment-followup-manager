@@ -39,24 +39,26 @@ public class HospitalController {
     @Value("${spring.mail.username:vashishtharsh6@gmail.com}")
     private String mailFrom;
 
-    // Helper: Send SMTP Email asynchronously in a background thread to prevent UI blocking
+    @Value("${spring.mail.password:suxonziqwqqblvsu}")
+    private String mailPassword;
+
+    // Helper: Dispatch emails via Vercel serverless proxy to bypass Render Free Tier SMTP port blocking
     private void sendEmail(String to, String subject, String htmlContent) {
         new Thread(() -> {
-            if (mailSender == null) {
-                System.out.println("[SMTP SIMULATOR] To: " + to + " | Subject: " + subject + "\nBody: " + htmlContent);
-                return;
-            }
             try {
-                MimeMessage message = mailSender.createMimeMessage();
-                MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-                helper.setFrom(mailFrom);
-                helper.setTo(to);
-                helper.setSubject(subject);
-                helper.setText(htmlContent, true);
-                mailSender.send(message);
-                System.out.println("Email sent successfully to: " + to);
+                org.springframework.web.client.RestTemplate restTemplate = new org.springframework.web.client.RestTemplate();
+                java.util.Map<String, String> request = new java.util.HashMap<>();
+                request.put("to", to);
+                request.put("subject", subject);
+                request.put("html", htmlContent);
+                request.put("smtpUser", mailFrom);
+                request.put("smtpPass", mailPassword);
+
+                String vercelUrl = "https://healthcare-manager-pi.vercel.app/api/send-email";
+                restTemplate.postForObject(vercelUrl, request, String.class);
+                System.out.println("Email successfully dispatched via Vercel proxy to: " + to);
             } catch (Exception e) {
-                System.err.println("SMTP dispatch failed: " + e.getMessage());
+                System.err.println("Email dispatch via Vercel proxy failed: " + e.getMessage());
             }
         }).start();
     }
@@ -599,21 +601,20 @@ public class HospitalController {
     @GetMapping("/diag/send-test-email")
     public Map<String, Object> diagSendTestEmail() {
         Map<String, Object> response = new HashMap<>();
-        if (mailSender == null) {
-            response.put("success", false);
-            response.put("error", "JavaMailSender is null / not initialized.");
-            return response;
-        }
         try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            helper.setFrom(mailFrom);
-            helper.setTo(mailFrom); // Send test mail to self
-            helper.setSubject("CareSync SMTP Diagnostic Test Email");
-            helper.setText("<h3>SMTP Diagnostic Test Successful!</h3><p>If you see this, your Spring Boot SMTP connection is fully operational.</p>", true);
-            mailSender.send(message);
+            org.springframework.web.client.RestTemplate restTemplate = new org.springframework.web.client.RestTemplate();
+            java.util.Map<String, String> request = new java.util.HashMap<>();
+            request.put("to", mailFrom);
+            request.put("subject", "CareSync SMTP Diagnostic Test Email");
+            request.put("html", "<h3>SMTP Diagnostic Test Successful!</h3><p>If you see this, your Spring Boot SMTP connection is fully operational via Vercel Proxy.</p>");
+            request.put("smtpUser", mailFrom);
+            request.put("smtpPass", mailPassword);
+
+            String vercelUrl = "https://healthcare-manager-pi.vercel.app/api/send-email";
+            String res = restTemplate.postForObject(vercelUrl, request, String.class);
             response.put("success", true);
-            response.put("message", "Test email sent successfully to " + mailFrom);
+            response.put("proxy_response", res);
+            response.put("message", "Test email sent successfully via Vercel proxy to " + mailFrom);
         } catch (Exception e) {
             response.put("success", false);
             response.put("error_message", e.getMessage());

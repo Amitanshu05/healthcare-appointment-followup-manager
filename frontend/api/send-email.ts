@@ -19,15 +19,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { to, subject, body } = req.body;
+  const { to, subject, body, html } = req.body;
 
-  if (!to || !subject || !body) {
+  if (!to || !subject || (!body && !html)) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
-  // Load SMTP credentials from environment variables (fallback to user's config)
-  const smtpUser = process.env.SMTP_USERNAME || 'vashishtharsh6@gmail.com';
-  const smtpPass = process.env.SMTP_PASSWORD || 'suxonziqwqqblvsu';
+  // Load SMTP credentials from request body or environment variables
+  const smtpUser = req.body.smtpUser || process.env.SMTP_USERNAME || 'vashishtharsh6@gmail.com';
+  const smtpPass = req.body.smtpPass || process.env.SMTP_PASSWORD || 'suxonziqwqqblvsu';
 
   const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
@@ -44,7 +44,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       from: `"CareSync Hospital" <${smtpUser}>`,
       to,
       subject,
-      text: body,
+      text: body || '',
+      html: html || body || '',
     });
     return res.status(200).json({ success: true });
   } catch (error: any) {
