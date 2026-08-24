@@ -299,12 +299,6 @@ export default function App() {
         setIsLoggedIn(true);
         setCurrentUser({ name: nameInput, email: emailInput, role: 'patient' });
         refreshData();
-
-        sendEmailAlert(
-          emailInput,
-          'Welcome to CareSync Hospital!',
-          `Hello ${nameInput},\n\nYour patient account has been successfully registered under ${emailInput}!\n\nYou can now log in to schedule medical slot consultations, write down symptom profiles, and sync appointments with Google Calendar.\n\nBest regards,\nCareSync Hospital Admin Team`
-        );
       } else {
         setAuthError(data.message || 'Registration failed.');
       }
@@ -379,12 +373,6 @@ export default function App() {
         refreshData();
         setSelectedSlot('');
         setProblemDescription('');
-
-        sendEmailAlert(
-          currentUser.email,
-          'Appointment Booking Confirmed - CareSync Hospital',
-          `Hello ${currentUser.name},\n\nYour medical appointment has been successfully scheduled!\n\nSlot Timing: 2026-08-25 ${selectedSlot}\nSymptom Chief Complaint: "${problemDescription}"\n\nA Google Calendar invitation has been automatically synced to both you and the specialist.\n\nBest regards,\nCareSync Scheduling Portal`
-        );
       } else {
         setBookingMsg({ text: data.message || 'Booking failed', type: 'error' });
       }
