@@ -7,6 +7,7 @@ import com.healthcare.repository.AppointmentRepository;
 import com.healthcare.repository.SlotRepository;
 import com.healthcare.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -35,6 +36,9 @@ public class HospitalController {
     @Autowired(required = false)
     private JavaMailSender mailSender;
 
+    @Value("${spring.mail.username:vashishtharsh6@gmail.com}")
+    private String mailFrom;
+
     // Helper: Send SMTP Email asynchronously in a background thread to prevent UI blocking
     private void sendEmail(String to, String subject, String htmlContent) {
         new Thread(() -> {
@@ -45,7 +49,7 @@ public class HospitalController {
             try {
                 MimeMessage message = mailSender.createMimeMessage();
                 MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-                helper.setFrom("vashishtharsh6@gmail.com");
+                helper.setFrom(mailFrom);
                 helper.setTo(to);
                 helper.setSubject(subject);
                 helper.setText(htmlContent, true);
