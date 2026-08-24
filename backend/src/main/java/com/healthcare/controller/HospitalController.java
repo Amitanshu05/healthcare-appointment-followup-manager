@@ -231,8 +231,11 @@ public class HospitalController {
         doc.setAvailable(true);
         userRepository.save(doc);
 
-        // Seed slots
-        String[] times = {"10:00 AM", "11:30 AM", "02:00 PM", "03:30 PM"};
+        // Seed slots with date-time format
+        String[] times = {
+            "2026-08-25 10:00 AM", "2026-08-25 11:30 AM", "2026-08-25 02:00 PM", "2026-08-25 03:30 PM",
+            "2026-08-26 10:00 AM", "2026-08-26 11:30 AM", "2026-08-26 02:00 PM", "2026-08-26 03:30 PM"
+        };
         for (String time : times) {
             Slot slot = new Slot();
             slot.setDoctor(doc);

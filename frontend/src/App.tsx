@@ -731,7 +731,7 @@ export default function App() {
                   {isLoggingIn ? (
                     <>
                       <span className="animate-spin h-4 w-4 mr-2 border-2 border-white border-t-transparent rounded-full"></span>
-                      Signing In... (Waking up server)
+                      Signing In...
                     </>
                   ) : (
                     'Sign In'
@@ -839,7 +839,7 @@ export default function App() {
                   {isRegistering ? (
                     <>
                       <span className="animate-spin h-4 w-4 mr-2 border-2 border-white border-t-transparent rounded-full"></span>
-                      Creating Profile... (Waking up server)
+                      Creating Profile...
                     </>
                   ) : (
                     'Create Profile'
