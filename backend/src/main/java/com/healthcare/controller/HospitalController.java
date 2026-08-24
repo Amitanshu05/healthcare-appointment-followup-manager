@@ -346,6 +346,9 @@ public class HospitalController {
             // Generate AI Triage Post-visit summary
             String aiSummary = "✨ AI Clinical Insights:\n• Clinical Goal: Recover from current symptoms.\n• Medication Schedule: " + prescription + "\n• Advice: Take proper rest and stay hydrated.\n• Reminder status: Medication notifications active.";
             appt.setPostVisitSummary(aiSummary);
+            if (appt.getCreatedAt() == null) {
+                appt.setCreatedAt(LocalDateTime.now());
+            }
             appointmentRepository.save(appt);
 
             sendEmail(
