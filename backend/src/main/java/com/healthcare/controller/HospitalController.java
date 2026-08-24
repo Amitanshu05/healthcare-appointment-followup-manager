@@ -594,4 +594,34 @@ public class HospitalController {
         }
         return diag;
     }
+
+    // 14. SMTP Diagnostic Test Mail Dispatch (Synchronous, catches error details)
+    @GetMapping("/diag/send-test-email")
+    public Map<String, Object> diagSendTestEmail() {
+        Map<String, Object> response = new HashMap<>();
+        if (mailSender == null) {
+            response.put("success", false);
+            response.put("error", "JavaMailSender is null / not initialized.");
+            return response;
+        }
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom(mailFrom);
+            helper.setTo(mailFrom); // Send test mail to self
+            helper.setSubject("CareSync SMTP Diagnostic Test Email");
+            helper.setText("<h3>SMTP Diagnostic Test Successful!</h3><p>If you see this, your Spring Boot SMTP connection is fully operational.</p>", true);
+            mailSender.send(message);
+            response.put("success", true);
+            response.put("message", "Test email sent successfully to " + mailFrom);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("error_message", e.getMessage());
+            java.io.StringWriter sw = new java.io.StringWriter();
+            java.io.PrintWriter pw = new java.io.PrintWriter(sw);
+            e.printStackTrace(pw);
+            response.put("stack_trace", sw.toString());
+        }
+        return response;
+    }
 }
