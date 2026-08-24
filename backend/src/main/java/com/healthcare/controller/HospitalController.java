@@ -575,4 +575,20 @@ public class HospitalController {
         }
         return response;
     }
+
+    // 13. SMTP Diagnostic check
+    @GetMapping("/diag/smtp")
+    public Map<String, Object> diagSmtp() {
+        Map<String, Object> diag = new HashMap<>();
+        diag.put("mailFrom", mailFrom);
+        diag.put("mailSenderInitialized", mailSender != null);
+        if (mailSender instanceof org.springframework.mail.javamail.JavaMailSenderImpl) {
+            org.springframework.mail.javamail.JavaMailSenderImpl impl = (org.springframework.mail.javamail.JavaMailSenderImpl) mailSender;
+            diag.put("host", impl.getHost());
+            diag.put("port", impl.getPort());
+            diag.put("username", impl.getUsername());
+            diag.put("password_length", impl.getPassword() != null ? impl.getPassword().length() : 0);
+        }
+        return diag;
+    }
 }
