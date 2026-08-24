@@ -38,6 +38,42 @@ healthcare_manager/
 
 ---
 
+## 🚀 Getting Started & Local Setup
+
+To clone and run this project locally, follow these simple setup steps:
+
+### 1. Configure Environment Variables
+Copy the configuration template file `.env.example` to a new `.env` file in the root directory:
+```bash
+cp .env.example .env
+```
+Open the `.env` file and insert your own database parameters, SMTP email app password, and Gemini AI key.
+
+### 2. Start the Local PostgreSQL Database
+Run Docker Compose to start the Postgres container service:
+```bash
+docker-compose up -d
+```
+
+### 3. Compile and Run the Java Backend
+Navigate to the `backend` folder and start the Spring Boot application using Maven:
+```bash
+cd backend
+mvn clean spring-boot:run
+```
+*The database tables will be automatically created and seeded on startup by Flyway migrations.*
+
+### 4. Run the React Frontend
+Open a new terminal window, navigate to the `frontend` folder, install npm dependencies, and start the development server:
+```bash
+cd frontend
+npm install
+npm run dev
+```
+Open `http://localhost:5173` in your browser to interact with the portal!
+
+---
+
 ## 👑 Evaluation Credentials (Live Portal)
 
 All pre-seeded visual helper tags have been removed for privacy and security. Use the credentials below to evaluate role-based access control inside the live portal:
