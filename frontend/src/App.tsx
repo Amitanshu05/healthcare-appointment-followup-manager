@@ -104,6 +104,8 @@ export default function App() {
   const [nameInput, setNameInput] = useState('');
   const [contactInput, setContactInput] = useState('');
   const [authError, setAuthError] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
 
   const API_BASE = window.location.hostname === 'localhost'
     ? 'http://localhost:8080'
@@ -240,6 +242,7 @@ export default function App() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError('');
+    setIsLoggingIn(true);
 
     try {
       const res = await fetch(`${API_BASE}/api/auth/login`, {
@@ -255,7 +258,9 @@ export default function App() {
       } else {
         setAuthError(data.message || 'Invalid email or password');
       }
+      setIsLoggingIn(false);
     } catch (err) {
+      setIsLoggingIn(false);
       // Graceful fallback for offline prototype testing on Vercel
       if (emailInput === 'admin@caresync.com' && passwordInput === 'AdminCareSync2026') {
         setIsLoggedIn(true);
@@ -275,9 +280,11 @@ export default function App() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError('');
+    setIsRegistering(true);
 
     if (!nameInput || !emailInput || !contactInput || !passwordInput) {
       setAuthError('All fields are required.');
+      setIsRegistering(false);
       return;
     }
 
@@ -301,7 +308,9 @@ export default function App() {
       } else {
         setAuthError(data.message || 'Registration failed.');
       }
+      setIsRegistering(false);
     } catch (err) {
+      setIsRegistering(false);
       // Local prototype register fallback
       const newPatient: PatientUser = {
         name: nameInput,
@@ -728,9 +737,17 @@ export default function App() {
 
                 <button 
                   type="submit" 
-                  className="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                  disabled={isLoggingIn}
+                  className="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:bg-slate-400"
                 >
-                  Sign In
+                  {isLoggingIn ? (
+                    <>
+                      <span className="animate-spin h-4 w-4 mr-2 border-2 border-white border-t-transparent rounded-full"></span>
+                      Signing In... (Waking up server)
+                    </>
+                  ) : (
+                    'Sign In'
+                  )}
                 </button>
               </form>
             </div>
@@ -828,9 +845,17 @@ export default function App() {
 
                 <button 
                   type="submit" 
-                  className="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                  disabled={isRegistering}
+                  className="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:bg-slate-400"
                 >
-                  Create Profile
+                  {isRegistering ? (
+                    <>
+                      <span className="animate-spin h-4 w-4 mr-2 border-2 border-white border-t-transparent rounded-full"></span>
+                      Creating Profile... (Waking up server)
+                    </>
+                  ) : (
+                    'Create Profile'
+                  )}
                 </button>
               </form>
             </div>
