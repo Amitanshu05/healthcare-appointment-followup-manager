@@ -31,23 +31,25 @@ public class HospitalController {
     @Autowired(required = false)
     private JavaMailSender mailSender;
 
-    // Helper: Send SMTP Email if mailSender is available
+    // Helper: Send SMTP Email asynchronously in a background thread to prevent UI blocking
     private void sendEmail(String to, String subject, String text) {
-        if (mailSender == null) {
-            System.out.println("[SMTP SIMULATOR] To: " + to + " | Subject: " + subject + "\nBody: " + text);
-            return;
-        }
-        try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom("vashishtharsh6@gmail.com");
-            message.setTo(to);
-            message.setSubject(subject);
-            message.setText(text);
-            mailSender.send(message);
-            System.out.println("Email sent successfully to: " + to);
-        } catch (Exception e) {
-            System.err.println("SMTP dispatch failed: " + e.getMessage());
-        }
+        new Thread(() -> {
+            if (mailSender == null) {
+                System.out.println("[SMTP SIMULATOR] To: " + to + " | Subject: " + subject + "\nBody: " + text);
+                return;
+            }
+            try {
+                SimpleMailMessage message = new SimpleMailMessage();
+                message.setFrom("vashishtharsh6@gmail.com");
+                message.setTo(to);
+                message.setSubject(subject);
+                message.setText(text);
+                mailSender.send(message);
+                System.out.println("Email sent successfully to: " + to);
+            } catch (Exception e) {
+                System.err.println("SMTP dispatch failed: " + e.getMessage());
+            }
+        }).start();
     }
 
     // 1. Authenticate logins (Admin, Doctor, Patient)
