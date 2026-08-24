@@ -77,3 +77,16 @@ Network anomalies or third-party SMTP API rate limits are handled using a reliab
 * **Asynchronous Quartz Poller**: A background scheduler checks for `PENDING` or `FAILED` outbox records every 5 minutes.
 * **Exponential Backoff**: If an SMTP attempt fails, the retry count increments, scheduling the next attempt with a delay: $\text{Delay} = 2^{\text{retry}} \times 2 \text{ minutes}$.
 * **Dead Letter Queue (DLQ)**: If a notification fails 5 consecutive times, it is flagged as `DLQ` for administrator monitoring, protecting the mail dispatch pipeline from loops.
+
+### 5. Forgot Password & OTP Flow
+* **Verification Loop**: Implemented `/api/auth/forgot-password` generating a secure 6-digit numeric OTP, matching it to the patient email inside an in-memory `ConcurrentHashMap` (`otpStore`).
+* **Secure Verification**: A second endpoint `/api/auth/reset-password` validates the OTP and updates the user's password directly in the database.
+* **OTP Email Dispatch**: Sends the OTP code to the patient dynamically via email.
+
+### 6. Premium HTML Styled Email Notifications
+* **MimeMessage Integration**: Upgraded the notification dispatcher from plain text `SimpleMailMessage` to responsive HTML `MimeMessage` and `MimeMessageHelper`.
+* **Caring Templates**: Designed themed email alerts with tailored layouts (Welcome Registration, Booking Confirmation, Doctor Leave/Patient Cancellations, and Consultation Completion summaries) with grid cards for clinical prescriptions and AI insights.
+
+### 7. Cold-Start Usability Loader UX
+* **Visual Loaders**: Integrated active loaders (`isLoggingIn`, `isRegistering` states) on Sign In and Create Profile buttons.
+* **Cold-Start Protection**: Disables inputs and renders a spinning circle with a clear `Signing In... (Waking up server)` status indicator, guiding the user while the Render Free Tier server performs a cold-start boot sequence.

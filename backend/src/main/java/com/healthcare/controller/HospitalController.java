@@ -9,6 +9,8 @@ import com.healthcare.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import jakarta.mail.internet.MimeMessage;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -34,24 +36,68 @@ public class HospitalController {
     private JavaMailSender mailSender;
 
     // Helper: Send SMTP Email asynchronously in a background thread to prevent UI blocking
-    private void sendEmail(String to, String subject, String text) {
+    private void sendEmail(String to, String subject, String htmlContent) {
         new Thread(() -> {
             if (mailSender == null) {
-                System.out.println("[SMTP SIMULATOR] To: " + to + " | Subject: " + subject + "\nBody: " + text);
+                System.out.println("[SMTP SIMULATOR] To: " + to + " | Subject: " + subject + "\nBody: " + htmlContent);
                 return;
             }
             try {
-                SimpleMailMessage message = new SimpleMailMessage();
-                message.setFrom("vashishtharsh6@gmail.com");
-                message.setTo(to);
-                message.setSubject(subject);
-                message.setText(text);
+                MimeMessage message = mailSender.createMimeMessage();
+                MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+                helper.setFrom("vashishtharsh6@gmail.com");
+                helper.setTo(to);
+                helper.setSubject(subject);
+                helper.setText(htmlContent, true);
                 mailSender.send(message);
                 System.out.println("Email sent successfully to: " + to);
             } catch (Exception e) {
                 System.err.println("SMTP dispatch failed: " + e.getMessage());
             }
         }).start();
+    }
+
+    // Helper: Wrap email messages in a highly professional, caring HTML layout
+    private String getEmailHtmlWrapper(String title, String heading, String bodyContent) {
+        return "<!DOCTYPE html>" +
+               "<html>" +
+               "<head>" +
+               "  <meta charset='utf-8'>" +
+               "  <style>" +
+               "    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #F8FAFC; color: #1E293B; margin: 0; padding: 20px; }" +
+               "    .container { max-width: 600px; margin: 0 auto; background-color: #FFFFFF; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03); border: 1px solid #E2E8F0; }" +
+               "    .header { background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%); padding: 30px 20px; text-align: center; color: #FFFFFF; }" +
+               "    .header h1 { margin: 0; font-size: 24px; font-weight: 800; letter-spacing: 0.5px; }" +
+               "    .header p { margin: 5px 0 0 0; font-size: 14px; opacity: 0.9; }" +
+               "    .content { padding: 30px 25px; line-height: 1.6; font-size: 15px; }" +
+               "    .card { background-color: #F1F5F9; border-radius: 8px; padding: 20px; border-left: 4px solid #3B82F6; margin: 20px 0; }" +
+               "    .prescription-card { background-color: #ECFDF5; border-radius: 8px; padding: 20px; border-left: 4px solid #10B981; margin: 20px 0; }" +
+               "    .ai-card { background-color: #EFF6FF; border-radius: 8px; padding: 20px; border-left: 4px solid #2563EB; margin: 20px 0; }" +
+               "    .bullet-list { margin: 10px 0 0 0; padding-left: 20px; }" +
+               "    .bullet-list li { margin-bottom: 8px; }" +
+               "    .footer { background-color: #F1F5F9; padding: 20px; text-align: center; font-size: 12px; color: #64748B; border-top: 1px solid #E2E8F0; }" +
+               "    .footer p { margin: 5px 0; }" +
+               "    .sweet-note { font-style: italic; color: #475569; border-top: 1px dashed #CBD5E1; padding-top: 15px; margin-top: 25px; }" +
+               "  </style>" +
+               "</head>" +
+               "<body>" +
+               "  <div class='container'>" +
+               "    <div class='header'>" +
+               "      <h1>CareSync Hospital</h1>" +
+               "      <p>" + title + "</p>" +
+               "    </div>" +
+               "    <div class='content'>" +
+               "      <h2 style='margin-top: 0; color: #0F172A;'>" + heading + "</h2>" +
+               "      " + bodyContent + "" +
+               "    </div>" +
+               "    <div class='footer'>" +
+               "      <p>CareSync Scheduling Portal &copy; 2026</p>" +
+               "      <p>CareSync Hospital Center, Clinical Drive Road, OR 97401</p>" +
+               "      <p>Need urgent help? Call +1 (555) 019-9000 or reply to this mail.</p>" +
+               "    </div>" +
+               "  </div>" +
+               "</body>" +
+               "</html>";
     }
 
     // 1. Authenticate logins (Admin, Doctor, Patient)
@@ -100,11 +146,26 @@ public class HospitalController {
         patient.setRole("patient");
         userRepository.save(patient);
 
-        // Send Welcome email
+        // Send Welcome email (HTML)
+        String welcomeBody = "<p>Hello <strong>" + name + "</strong>,</p>" +
+                             "<p>Welcome to the CareSync family! We are thrilled to partner with you in managing your healthcare needs efficiently and with dedicated support.</p>" +
+                             "<div class='card'>" +
+                             "  <h3 style='margin-top: 0; color: #2563EB;'>Your CareSync Portal Is Ready</h3>" +
+                             "  <p>You can now log in to your patient dashboard using your registered email: <strong>" + email + "</strong></p>" +
+                             "  <ul class='bullet-list'>" +
+                             "    <li>Schedule consultations with leading medical specialists.</li>" +
+                             "    <li>Track and manage your appointments in real time.</li>" +
+                             "    <li>Write down and update your symptom profile logs.</li>" +
+                             "    <li>Sync visits directly to your Google Calendar automatically.</li>" +
+                             "  </ul>" +
+                             "</div>" +
+                             "<p>If you have any questions or need guidance, our patient support line is always open for you.</p>" +
+                             "<p class='sweet-note'>Wishing you great health and happiness,<br><strong>The CareSync Admin & Care Team</strong></p>";
+
         sendEmail(
             email,
             "Welcome to CareSync Hospital!",
-            "Hello " + name + ",\n\nYour patient account has been successfully registered under " + email + "!\n\nYou can now log in to schedule medical slot consultations, write down symptom profiles, and sync appointments with Google Calendar.\n\nBest regards,\nCareSync Hospital Admin Team"
+            getEmailHtmlWrapper("Account Registration", "Welcome to CareSync!", welcomeBody)
         );
 
         response.put("success", true);
@@ -219,11 +280,21 @@ public class HospitalController {
                         slotRepository.save(slot);
                         appointmentRepository.save(appt);
 
-                        // Send cancellation email
+                        // Send cancellation email (HTML)
+                        String leaveCancelBody = "<p>Hello <strong>" + appt.getPatient().getName() + "</strong>,</p>" +
+                                                 "<p>We are writing to inform you with regret that your upcoming consultation with <strong>" + doc.getName() + "</strong> has been cancelled because the doctor is currently unavailable or on leave.</p>" +
+                                                 "<div class='card' style='border-left-color: #EF4444; background-color: #FEF2F2;'>" +
+                                                 "  <h3 style='margin-top: 0; color: #DC2626;'>Cancelled Appointment Details</h3>" +
+                                                 "  <p><strong>Doctor:</strong> " + doc.getName() + " (" + doc.getSpecialty() + ")</p>" +
+                                                 "  <p><strong>Original Slot:</strong> " + appt.getSlot().getSlotTime() + "</p>" +
+                                                 "</div>" +
+                                                 "<p>We sincerely apologize for any inconvenience this may cause to your schedule. Your health is our highest priority, so please log in to your patient dashboard to reschedule this visit with another available timing or specialist at your earliest convenience.</p>" +
+                                                 "<p class='sweet-note'>Please take care and rest well,<br><strong>The CareSync Clinical Support Team</strong></p>";
+
                         sendEmail(
                             appt.getPatient().getEmail(),
                             "Appointment Cancelled due to Doctor Leave - CareSync Hospital",
-                            "Hello " + appt.getPatient().getName() + ",\n\nWe regret to inform you that your appointment with " + doc.getName() + " on " + appt.getSlot().getSlotTime() + " has been cancelled because the doctor is marked on leave.\n\nPlease log in to reschedule your consultation.\n\nBest regards,\nCareSync Admin Team"
+                            getEmailHtmlWrapper("Appointment Cancelled", "Doctor Leave Notification", leaveCancelBody)
                         );
                     }
                 }
@@ -294,11 +365,22 @@ public class HospitalController {
         appt.setStatus("booked");
         appointmentRepository.save(appt);
 
-        // Send booking confirmation email
+        // Send booking confirmation email (HTML)
+        String confirmBody = "<p>Hello <strong>" + patientOpt.get().getName() + "</strong>,</p>" +
+                             "<p>Your medical appointment has been successfully scheduled. We look forward to providing you with dedicated clinical consultation.</p>" +
+                             "<div class='card'>" +
+                             "  <h3 style='margin-top: 0; color: #2563EB;'>Appointment Details</h3>" +
+                             "  <p><strong>Doctor Specialist:</strong> " + doctorOpt.get().getName() + " (" + doctorOpt.get().getSpecialty() + ")</p>" +
+                             "  <p><strong>Scheduled Slot:</strong> " + slotTime + "</p>" +
+                             "  <p><strong>Symptom/Chief Complaint:</strong> \"" + problem + "\"</p>" +
+                             "</div>" +
+                             "<p>A Google Calendar invitation has been automatically synced to your email. Please ensure you are logged into your portal dashboard a few minutes before the slot starts.</p>" +
+                             "<p class='sweet-note'>Wishing you a swift and comfortable recovery,<br><strong>CareSync Scheduling Team</strong></p>";
+
         sendEmail(
             patientEmail,
             "Appointment Booking Confirmed - CareSync Hospital",
-            "Hello " + patientOpt.get().getName() + ",\n\nYour medical appointment has been successfully scheduled with " + doctorOpt.get().getName() + " (" + doctorOpt.get().getSpecialty() + ")!\n\nSlot Timing: 2026-08-25 " + slotTime + "\nSymptom Chief Complaint: \"" + problem + "\"\n\nA Google Calendar invitation has been automatically synced to both you and the specialist.\n\nBest regards,\nCareSync Scheduling Portal"
+            getEmailHtmlWrapper("Booking Confirmation", "Your Appointment is Confirmed", confirmBody)
         );
 
         response.put("success", true);
@@ -318,10 +400,21 @@ public class HospitalController {
             slotRepository.save(slot);
             appointmentRepository.save(appt);
 
+            // Send cancellation email (HTML)
+            String cancelBody = "<p>Hello <strong>" + appt.getPatient().getName() + "</strong>,</p>" +
+                                "<p>This is a confirmation that your scheduled medical appointment has been successfully cancelled as per your request.</p>" +
+                                "<div class='card' style='border-left-color: #94A3B8; background-color: #F8FAFC;'>" +
+                                "  <h3 style='margin-top: 0; color: #475569;'>Cancelled Appointment Details</h3>" +
+                                "  <p><strong>Doctor:</strong> " + appt.getDoctor().getName() + "</p>" +
+                                "  <p><strong>Timing Slot:</strong> " + appt.getSlot().getSlotTime() + "</p>" +
+                                "</div>" +
+                                "<p>The corresponding Google Calendar event has been automatically removed. If you cancelled by mistake or wish to reschedule, you can always log back in to pick a new timing.</p>" +
+                                "<p class='sweet-note'>We are here to support you whenever you need us,<br><strong>CareSync Scheduling Team</strong></p>";
+
             sendEmail(
                 appt.getPatient().getEmail(),
                 "Appointment Cancelled - CareSync Hospital",
-                "Hello " + appt.getPatient().getName() + ",\n\nYour appointment with " + appt.getDoctor().getName() + " scheduled for " + appt.getSlot().getSlotTime() + " has been successfully cancelled.\n\nThe corresponding Google Calendar event has been removed.\n\nBest regards,\nCareSync Scheduling Portal"
+                getEmailHtmlWrapper("Appointment Cancelled", "Cancellation Confirmed", cancelBody)
             );
             response.put("success", true);
         } else {
@@ -351,10 +444,34 @@ public class HospitalController {
             }
             appointmentRepository.save(appt);
 
+            // Format AI Summary dynamically into HTML list items
+            String[] summaryItems = aiSummary.split("\n");
+            StringBuilder summaryHtml = new StringBuilder("<ul class='bullet-list'>");
+            for (String item : summaryItems) {
+                if (item.trim().isEmpty() || item.startsWith("✨")) continue;
+                String cleanItem = item.trim().replaceFirst("^[\\-\\•\\*]\\s*", "");
+                summaryHtml.append("<li>").append(cleanItem).append("</li>");
+            }
+            summaryHtml.append("</ul>");
+
+            // Send completed email (HTML)
+            String completeBody = "<p>Hello <strong>" + appt.getPatient().getName() + "</strong>,</p>" +
+                                  "<p>Your medical consultation with <strong>" + appt.getDoctor().getName() + "</strong> is completed. We have generated a comprehensive summary and prescription details for you.</p>" +
+                                  "<div class='prescription-card'>" +
+                                  "  <h3 style='margin-top: 0; color: #059669;'>📋 Doctor's Prescription Notes</h3>" +
+                                  "  <p style='font-size: 16px; font-weight: 500; color: #065F46; white-space: pre-wrap;'>" + prescription + "</p>" +
+                                  "</div>" +
+                                  "<div class='ai-card'>" +
+                                  "  <h3 style='margin-top: 0; color: #2563EB;'>✨ AI Post-Visit Care Summary</h3>" +
+                                  "  " + summaryHtml.toString() + "" +
+                                  "</div>" +
+                                  "<p>Your prescription records are permanently stored in your patient dashboard. Please adhere strictly to the schedule and seek help if you experience any worsening signs.</p>" +
+                                  "<p class='sweet-note'>Wishing you great health and vitality,<br><strong>Your CareSync Consultation Support Team</strong></p>";
+
             sendEmail(
                 appt.getPatient().getEmail(),
                 "Consultation Completed & Prescription Details - CareSync Hospital",
-                "Hello " + appt.getPatient().getName() + ",\n\nYour consultation with " + appt.getDoctor().getName() + " is completed!\n\nHere are the details:\n\n=== Doctor Diagnosis Notes ===\n" + prescription + "\n\n=== Patient Friendly AI Clinical Summary ===\n" + aiSummary + "\n\nThank you for choosing CareSync Hospital.\n\nBest regards,\nCareSync Care Team"
+                getEmailHtmlWrapper("Consultation Completed", "Medical Summary & Advice", completeBody)
             );
 
             response.put("success", true);
