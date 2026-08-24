@@ -100,7 +100,7 @@ export default function App() {
 
   const API_BASE = window.location.hostname === 'localhost'
     ? 'http://localhost:8080'
-    : 'https://healthcare-manager-5.onrender.com'; // Render backend URL
+    : 'https://healthcare-manager-9.onrender.com'; // Render backend URL
 
   const [doctors, setDoctors] = useState<Doctor[]>(INITIAL_DOCTORS);
   const [appointments, setAppointments] = useState<Appointment[]>(INITIAL_APPOINTMENTS);
