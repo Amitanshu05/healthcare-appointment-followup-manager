@@ -90,7 +90,14 @@ const INITIAL_APPOINTMENTS: Appointment[] = [
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState<{ name: string; email: string; role: 'patient' | 'doctor' | 'admin' } | null>(null);
-  const [authView, setAuthView] = useState<'login' | 'register'>('login');
+  const [authView, setAuthView] = useState<'login' | 'register' | 'forgot'>('login');
+
+  // Forgot Password flow state variables
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotOtp, setForgotOtp] = useState('');
+  const [forgotNewPassword, setForgotNewPassword] = useState('');
+  const [forgotMsg, setForgotMsg] = useState({ text: '', type: '' });
+  const [forgotStep, setForgotStep] = useState(1); // 1: Send OTP, 2: Reset Password
 
   const [emailInput, setEmailInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
@@ -165,6 +172,70 @@ export default function App() {
   useEffect(() => {
     refreshData();
   }, []);
+
+  const handleSendOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotMsg({ text: '', type: '' });
+
+    if (!forgotEmail) {
+      setForgotMsg({ text: 'Email is required.', type: 'error' });
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: forgotEmail })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setForgotMsg({ text: 'A verification code (OTP) has been sent to your email!', type: 'success' });
+        setForgotStep(2);
+      } else {
+        setForgotMsg({ text: data.message || 'Email not found.', type: 'error' });
+      }
+    } catch (err) {
+      setForgotMsg({ text: 'Connection to backend failed.', type: 'error' });
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotMsg({ text: '', type: '' });
+
+    if (!forgotOtp || !forgotNewPassword) {
+      setForgotMsg({ text: 'All fields are required.', type: 'error' });
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: forgotEmail,
+          otp: forgotOtp,
+          newPassword: forgotNewPassword
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setForgotMsg({ text: 'Password successfully reset! You can now log in.', type: 'success' });
+        setTimeout(() => {
+          setAuthView('login');
+          setForgotStep(1);
+          setForgotEmail('');
+          setForgotOtp('');
+          setForgotNewPassword('');
+        }, 3000);
+      } else {
+        setForgotMsg({ text: data.message || 'Reset failed.', type: 'error' });
+      }
+    } catch (err) {
+      setForgotMsg({ text: 'Connection to backend failed.', type: 'error' });
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -645,6 +716,16 @@ export default function App() {
                   </div>
                 </div>
 
+                <div className="flex items-center justify-end text-xs">
+                  <button 
+                    type="button"
+                    onClick={() => { setAuthView('forgot'); setForgotStep(1); setForgotMsg({ text: '', type: '' }); }} 
+                    className="font-semibold text-blue-600 hover:text-blue-500 underline"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+
                 <button 
                   type="submit" 
                   className="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
@@ -752,6 +833,105 @@ export default function App() {
                   Create Profile
                 </button>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* ==================== FORGOT PASSWORD VIEW ==================== */}
+        {!isLoggedIn && authView === 'forgot' && (
+          <div className="sm:mx-auto sm:w-full sm:max-w-md my-auto">
+            <div className="text-center mb-6">
+              <h2 className="text-3xl font-extrabold text-slate-900">Reset Account Password</h2>
+              <p className="mt-2 text-sm text-slate-600">
+                Or{' '}
+                <button onClick={() => setAuthView('login')} className="font-semibold text-blue-600 hover:text-blue-500 underline">
+                  go back to sign in
+                </button>
+              </p>
+            </div>
+
+            <div className="bg-white py-8 px-4 shadow sm:rounded-xl sm:px-10 border border-slate-200">
+              {forgotMsg.text && (
+                <div className={`mb-4 border-l-4 p-4 rounded-md text-sm ${
+                  forgotMsg.type === 'success' 
+                    ? 'bg-green-50 border-green-400 text-green-700' 
+                    : 'bg-red-50 border-red-400 text-red-700'
+                }`}>
+                  {forgotMsg.text}
+                </div>
+              )}
+
+              {forgotStep === 1 ? (
+                <form onSubmit={handleSendOtp} className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700">Verify Registered Email</label>
+                    <div className="mt-1 relative rounded-md shadow-sm">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Mail className="h-4 w-4 text-slate-400" />
+                      </div>
+                      <input 
+                        type="email" 
+                        required 
+                        value={forgotEmail}
+                        onChange={(e) => setForgotEmail(e.target.value)}
+                        placeholder="e.g. yourname@gmail.com"
+                        className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  <button 
+                    type="submit" 
+                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                  >
+                    Send Verification Code
+                  </button>
+                </form>
+              ) : (
+                <form onSubmit={handleResetPassword} className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700">Enter 6-Digit OTP Code</label>
+                    <div className="mt-1 relative rounded-md shadow-sm">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Lock className="h-4 w-4 text-slate-400" />
+                      </div>
+                      <input 
+                        type="text" 
+                        required 
+                        maxLength={6}
+                        value={forgotOtp}
+                        onChange={(e) => setForgotOtp(e.target.value)}
+                        placeholder="e.g. 123456"
+                        className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700">Enter New Password</label>
+                    <div className="mt-1 relative rounded-md shadow-sm">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Lock className="h-4 w-4 text-slate-400" />
+                      </div>
+                      <input 
+                        type="password" 
+                        required 
+                        value={forgotNewPassword}
+                        onChange={(e) => setForgotNewPassword(e.target.value)}
+                        placeholder="New Password"
+                        className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  <button 
+                    type="submit" 
+                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+                  >
+                    Reset and Verify Password
+                  </button>
+                </form>
+              )}
             </div>
           </div>
         )}

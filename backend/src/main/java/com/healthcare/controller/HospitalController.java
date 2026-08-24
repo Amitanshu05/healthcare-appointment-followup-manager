@@ -19,6 +19,8 @@ import java.util.*;
 @CrossOrigin(origins = "*")
 public class HospitalController {
 
+    private static final Map<String, String> otpStore = new java.util.concurrent.ConcurrentHashMap<>();
+
     @Autowired
     private UserRepository userRepository;
 
@@ -374,5 +376,69 @@ public class HospitalController {
         map.put("aiPostSummary", appt.getPostVisitSummary());
         map.put("calendarSynced", appt.getStatus().equals("booked"));
         return map;
+    }
+
+    // 11. Request OTP Code for Forgot Password
+    @PostMapping("/auth/forgot-password")
+    public Map<String, Object> forgotPassword(@RequestBody Map<String, String> payload) {
+        String email = payload.get("email");
+        Map<String, Object> response = new HashMap<>();
+
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        if (userOpt.isEmpty()) {
+            response.put("success", false);
+            response.put("message", "User with this email does not exist.");
+            return response;
+        }
+
+        // Generate a random 6-digit verification code
+        String otp = String.format("%06d", new Random().nextInt(1000000));
+        otpStore.put(email, otp);
+
+        // Send OTP via asynchronous background thread
+        sendEmail(
+            email,
+            "CareSync Password Reset Verification Code",
+            "Hello " + userOpt.get().getName() + ",\n\nWe received a request to reset your CareSync Hospital account password.\n\nYour unique 6-digit OTP verification code is:\n\n👉 " + otp + "\n\nPlease enter this code on the reset screen to change your password.\n\nBest regards,\nCareSync Security Team"
+        );
+
+        response.put("success", true);
+        return response;
+    }
+
+    // 12. Reset password using valid OTP Code
+    @PostMapping("/auth/reset-password")
+    public Map<String, Object> resetPassword(@RequestBody Map<String, String> payload) {
+        String email = payload.get("email");
+        String otp = payload.get("otp");
+        String newPassword = payload.get("newPassword");
+        Map<String, Object> response = new HashMap<>();
+
+        String cachedOtp = otpStore.get(email);
+        if (cachedOtp == null || !cachedOtp.equals(otp)) {
+            response.put("success", false);
+            response.put("message", "Invalid verification code.");
+            return response;
+        }
+
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            user.setPasswordHash(newPassword);
+            userRepository.save(user);
+            otpStore.remove(email);
+
+            sendEmail(
+                email,
+                "CareSync Password Successfully Reset",
+                "Hello " + user.getName() + ",\n\nThis is a confirmation that your CareSync Hospital account password has been successfully reset!\n\nYou can now log in using your new password.\n\nBest regards,\nCareSync Portal Security"
+            );
+
+            response.put("success", true);
+        } else {
+            response.put("success", false);
+            response.put("message", "User details missing.");
+        }
+        return response;
     }
 }
