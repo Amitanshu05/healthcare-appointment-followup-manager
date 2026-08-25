@@ -88,6 +88,7 @@ const INITIAL_APPOINTMENTS: Appointment[] = [
 ];
 
 export default function App() {
+  const [showLanding, setShowLanding] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState<{ name: string; email: string; role: 'patient' | 'doctor' | 'admin' } | null>(null);
   const [authView, setAuthView] = useState<'login' | 'register' | 'forgot'>('login');
@@ -335,6 +336,7 @@ export default function App() {
     setEmailInput('');
     setPasswordInput('');
     setAuthError('');
+    setShowLanding(true);
   };
 
   const specialties = Array.from(new Set(doctors.map(d => d.specialty)));
@@ -624,17 +626,154 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
       
-      {/* Top Navigation Header */}
-      <nav className="bg-white border-b border-slate-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            
-            <div className="flex items-center space-x-2">
-              <Activity className="h-8 w-8 text-blue-600" />
-              <span className="text-xl font-bold text-slate-900 tracking-tight">
-                CareSync <span className="text-blue-600">Hospital</span>
-              </span>
+      {!isLoggedIn && showLanding ? (
+        <div className="min-h-screen flex flex-col bg-white">
+          {/* Header */}
+          <header className="bg-white border-b border-slate-100 sticky top-0 z-50">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex justify-between h-20 items-center">
+                <div className="flex items-center space-x-2">
+                  <Activity className="h-8 w-8 text-blue-600" />
+                  <span className="text-2xl font-bold text-slate-900 tracking-tight">
+                    CareSync <span className="text-blue-600">Hospital</span>
+                  </span>
+                </div>
+                <div className="flex items-center space-x-4">
+                  <button 
+                    onClick={() => { setShowLanding(false); setAuthView('login'); }}
+                    className="text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors"
+                  >
+                    Sign In
+                  </button>
+                  <button 
+                    onClick={() => { setShowLanding(false); setAuthView('register'); }}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-colors"
+                  >
+                    Book Consultation
+                  </button>
+                </div>
+              </div>
             </div>
+          </header>
+
+          {/* Hero Section */}
+          <section className="relative bg-gradient-to-b from-blue-50/50 to-white py-20 lg:py-32">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-150 mb-6">
+                ✨ Smart Clinical Scheduling & AI Summaries
+              </span>
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-955 tracking-tight max-w-4xl mx-auto leading-none">
+                Your Health, Our Priority. <br/>
+                <span className="text-blue-600">Fast Booking & AI Insights.</span>
+              </h1>
+              <p className="mt-6 text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto">
+                Experience seamless specialist booking, instant Google Calendar invites with active 15-minute reminders, and automated AI care summaries.
+              </p>
+              <div className="mt-10 flex flex-col sm:flex-row justify-center items-center gap-4">
+                <button 
+                  onClick={() => { setShowLanding(false); setAuthView('register'); }}
+                  className="w-full sm:w-auto inline-flex justify-center items-center px-8 py-4 border border-transparent text-base font-bold rounded-xl text-white bg-blue-600 hover:bg-blue-700 shadow-md hover:shadow-lg transition-all"
+                >
+                  Get Started (Free Patient Sign Up)
+                </button>
+                <button 
+                  onClick={() => { setShowLanding(false); setAuthView('login'); }}
+                  className="w-full sm:w-auto inline-flex justify-center items-center px-8 py-4 border border-slate-200 text-base font-bold rounded-xl text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 transition-all"
+                >
+                  Portal Login
+                </button>
+              </div>
+            </div>
+          </section>
+
+          {/* Statistics Section */}
+          <section className="bg-slate-50 border-y border-slate-100 py-12">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
+                <div>
+                  <p className="text-3xl sm:text-4xl font-extrabold text-slate-900">10k+</p>
+                  <p className="text-sm font-semibold text-slate-500 mt-1">Patients Served</p>
+                </div>
+                <div>
+                  <p className="text-3xl sm:text-4xl font-extrabold text-slate-900">50+</p>
+                  <p className="text-sm font-semibold text-slate-500 mt-1">Specialists Seeding</p>
+                </div>
+                <div>
+                  <p className="text-3xl sm:text-4xl font-extrabold text-slate-900">24/7</p>
+                  <p className="text-sm font-semibold text-slate-500 mt-1">AI Care Triage</p>
+                </div>
+                <div>
+                  <p className="text-3xl sm:text-4xl font-extrabold text-slate-900">99.8%</p>
+                  <p className="text-sm font-semibold text-slate-500 mt-1">Booking Success</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Features Section */}
+          <section className="py-20 lg:py-28 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-950">Features Designed for Patient Care</h2>
+              <p className="mt-4 text-slate-600 max-w-xl mx-auto font-medium">Discover how CareSync integrates modern technologies to deliver a premium hospital workflow.</p>
+            </div>
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="p-8 border border-slate-150 rounded-2xl bg-white hover:shadow-md transition-shadow">
+                <div className="h-12 w-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 mb-6">
+                  <Calendar className="h-6 w-6" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 mb-3">iCalendar Autopush</h3>
+                <p className="text-slate-600 leading-relaxed text-sm">
+                  Receive automatic Google Calendar events with active 15-minute phone alert reminders right inside your email inbox.
+                </p>
+              </div>
+              <div className="p-8 border border-slate-150 rounded-2xl bg-white hover:shadow-md transition-shadow">
+                <div className="h-12 w-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 mb-6">
+                  <Activity className="h-6 w-6" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 mb-3">AI Consultation Summaries</h3>
+                <p className="text-slate-600 leading-relaxed text-sm">
+                  Get dynamically formatted AI-triage summaries of your chief symptoms and doctor prescriptions instantly.
+                </p>
+              </div>
+              <div className="p-8 border border-slate-150 rounded-2xl bg-white hover:shadow-md transition-shadow">
+                <div className="h-12 w-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 mb-6">
+                  <Lock className="h-6 w-6" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 mb-3">Secure Verification Loops</h3>
+                <p className="text-slate-600 leading-relaxed text-sm">
+                  Forgot password? Authenticate instantly with secure 6-digit verification OTP mail codes before updating your database passwords.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* Footer */}
+          <footer className="mt-auto bg-slate-900 text-slate-400 py-12 text-sm border-t border-slate-800">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
+              <div className="flex items-center space-x-2">
+                <Activity className="h-6 w-6 text-blue-500" />
+                <span className="text-lg font-bold text-white tracking-tight">CareSync Portal</span>
+              </div>
+              <p className="text-xs text-slate-500">CareSync Hospital Center, Clinical Drive Road, OR 97401. &copy; 2026. All rights reserved.</p>
+            </div>
+          </footer>
+        </div>
+      ) : (
+        <>
+          {/* Top Navigation Header */}
+          <nav className="bg-white border-b border-slate-200 sticky top-0 z-50">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex justify-between h-16">
+                
+                <button 
+                  onClick={() => setShowLanding(true)}
+                  className="flex items-center space-x-2 focus:outline-none"
+                >
+                  <Activity className="h-8 w-8 text-blue-600" />
+                  <span className="text-xl font-bold text-slate-900 tracking-tight">
+                    CareSync <span className="text-blue-600">Hospital</span>
+                  </span>
+                </button>
 
             {isLoggedIn && currentUser && (
               <div className="flex items-center space-x-4">
@@ -1531,6 +1670,8 @@ export default function App() {
         &copy; 2026 CareSync Hospital - Clinical Appointment & Follow-up Manager
       </footer>
 
+      </>
+      )}
     </div>
   );
 }
