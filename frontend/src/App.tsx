@@ -693,8 +693,8 @@ export default function App() {
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
                   
-                  {/* Stats col */}
-                  <div className="md:col-span-1 border-r border-slate-200 pr-6 hidden md:block">
+                  {/* Stats col (Vertical line border removed) */}
+                  <div className="md:col-span-1 pr-6 hidden md:block">
                     <div className="grid grid-cols-2 gap-4 text-center">
                       <div>
                         <p className="text-2xl font-extrabold text-slate-900">10k+</p>
@@ -707,18 +707,18 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Mini Features (2 cols) */}
+                  {/* Mini Features (2 cols with subtle interactive animations) */}
                   <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="flex items-start space-x-3 p-3 bg-white border border-slate-150 rounded-xl hover:shadow-sm transition-shadow">
+                    <div className="flex items-start space-x-3 p-3 bg-white border border-slate-150 rounded-xl hover:shadow-md transition-all duration-300 hover:-translate-y-1">
                       <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
-                        <Calendar className="h-5 w-5" />
+                        <Calendar className="h-5 w-5 animate-pulse" />
                       </div>
                       <div>
                         <h4 className="text-sm font-bold text-slate-900">iCalendar Autopush</h4>
                         <p className="text-xs text-slate-500">Google Calendar invites with active 15-minute reminders.</p>
                       </div>
                     </div>
-                    <div className="flex items-start space-x-3 p-3 bg-white border border-slate-150 rounded-xl hover:shadow-sm transition-shadow">
+                    <div className="flex items-start space-x-3 p-3 bg-white border border-slate-150 rounded-xl hover:shadow-md transition-all duration-300 hover:-translate-y-1">
                       <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
                         <Activity className="h-5 w-5" />
                       </div>
@@ -745,7 +745,7 @@ export default function App() {
               <div className="grid md:grid-cols-3 gap-8">
                 
                 {/* Benefit 1 */}
-                <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
+                <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 cursor-default">
                   <div className="h-12 w-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-6">
                     <User className="h-6 w-6" />
                   </div>
@@ -756,7 +756,7 @@ export default function App() {
                 </div>
 
                 {/* Benefit 2 */}
-                <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
+                <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 cursor-default">
                   <div className="h-12 w-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-6">
                     <Clock className="h-6 w-6" />
                   </div>
@@ -767,7 +767,7 @@ export default function App() {
                 </div>
 
                 {/* Benefit 3 */}
-                <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
+                <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 cursor-default">
                   <div className="h-12 w-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-6">
                     <Activity className="h-6 w-6" />
                   </div>
@@ -792,7 +792,7 @@ export default function App() {
               <div className="grid md:grid-cols-2 gap-8">
                 
                 {/* Review 1 */}
-                <div className="p-8 bg-slate-50 rounded-2xl border border-slate-150 relative">
+                <div className="p-8 bg-slate-50 rounded-2xl border border-slate-150 hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 cursor-default relative">
                   <p className="text-slate-600 italic text-sm leading-relaxed mb-6">
                     "CareSync has completely simplified my consultation bookings. The automatic calendar invite landed in my inbox in 2 seconds, and the 15-minute pop-up reminder was absolutely perfect!"
                   </p>
@@ -803,12 +803,34 @@ export default function App() {
                 </div>
 
                 {/* Review 2 */}
-                <div className="p-8 bg-slate-50 rounded-2xl border border-slate-150 relative">
+                <div className="p-8 bg-slate-50 rounded-2xl border border-slate-150 hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 cursor-default relative">
                   <p className="text-slate-600 italic text-sm leading-relaxed mb-6">
                     "I was always anxious about missing doctor timings, but the real-time slot seeder and active calendar email reminders keep me perfectly aligned. The UI is incredibly clean and fast!"
                   </p>
                   <div>
                     <h4 className="font-bold text-slate-900 text-sm">Amitanshu V.</h4>
+                    <p className="text-xs text-slate-500 mt-0.5">Patient since August 2026</p>
+                  </div>
+                </div>
+
+                {/* Review 3 */}
+                <div className="p-8 bg-slate-50 rounded-2xl border border-slate-150 hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 cursor-default relative">
+                  <p className="text-slate-600 italic text-sm leading-relaxed mb-6">
+                    "As an administrator, managing doctor schedules was a nightmare. With CareSync, registering new specialists is effortless, and slots are auto-seeded immediately without errors."
+                  </p>
+                  <div>
+                    <h4 className="font-bold text-slate-900 text-sm">Priya P.</h4>
+                    <p className="text-xs text-slate-500 mt-0.5">Specialist Admin since August 2026</p>
+                  </div>
+                </div>
+
+                {/* Review 4 */}
+                <div className="p-8 bg-slate-50 rounded-2xl border border-slate-150 hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 cursor-default relative">
+                  <p className="text-slate-600 italic text-sm leading-relaxed mb-6">
+                    "The AI consultation summary is a game changer. It breaks down complex medical recommendations into simple steps so my family knows exactly what recovery routine to follow at home."
+                  </p>
+                  <div>
+                    <h4 className="font-bold text-slate-900 text-sm">Aarav S.</h4>
                     <p className="text-xs text-slate-500 mt-0.5">Patient since August 2026</p>
                   </div>
                 </div>
