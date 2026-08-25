@@ -627,7 +627,7 @@ export default function App() {
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
       
       {!isLoggedIn && showLanding ? (
-        <div className="bg-white select-none">
+        <div className="bg-white select-none h-screen overflow-y-scroll no-scrollbar scroll-smooth">
           {/* Fold 1: Main Landing Screen (Occupies exact height of the screen) */}
           <div className="min-h-screen flex flex-col justify-between border-b border-slate-100">
             {/* Header */}
@@ -735,7 +735,7 @@ export default function App() {
           </div>
 
           {/* Fold 2: Benefits, Reviews & Footer (Exact 100vh viewport) */}
-          <div className="h-screen flex flex-col justify-between bg-slate-50 py-8 border-b border-slate-100 overflow-hidden">
+          <div className="h-screen flex flex-col justify-between bg-slate-50 pt-8 pb-0 border-b border-slate-100 overflow-hidden">
             
             {/* Header / Benefits Section */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex-grow flex flex-col justify-around">
@@ -785,30 +785,52 @@ export default function App() {
 
               {/* Reviews (Row 2) */}
               <div>
-                <div className="text-center mb-6">
-                  <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">Patient Reviews</h2>
+                <div className="text-center mb-4">
+                  <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">Patient Reviews</h2>
                 </div>
                 
-                <div className="grid md:grid-cols-2 gap-6">
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {/* Review 1 */}
-                  <div className="p-5 bg-white rounded-xl border border-slate-200 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-default relative">
-                    <p className="text-slate-655 italic text-xs leading-relaxed mb-3">
+                  <div className="p-4 bg-white rounded-xl border border-slate-200 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-default relative">
+                    <p className="text-slate-655 italic text-[11px] leading-relaxed mb-2">
                       "CareSync has completely simplified my bookings. The calendar invite landed in my inbox in 2 seconds, and the 15-minute pop-up reminder was absolutely perfect!"
                     </p>
                     <div>
-                      <h4 className="font-bold text-slate-900 text-xs">Sanskar S.</h4>
-                      <p className="text-[10px] text-slate-400 mt-0.5">Patient since August 2026</p>
+                      <h4 className="font-bold text-slate-900 text-[11px]">Sanskar S.</h4>
+                      <p className="text-[9px] text-slate-400">Patient since August 2026</p>
                     </div>
                   </div>
 
                   {/* Review 2 */}
-                  <div className="p-5 bg-white rounded-xl border border-slate-200 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-default relative">
-                    <p className="text-slate-655 italic text-xs leading-relaxed mb-3">
+                  <div className="p-4 bg-white rounded-xl border border-slate-200 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-default relative">
+                    <p className="text-slate-655 italic text-[11px] leading-relaxed mb-2">
                       "I was always anxious about missing doctor timings, but the real-time slot seeder and active calendar email reminders keep me perfectly aligned. The UI is incredibly clean and fast!"
                     </p>
                     <div>
-                      <h4 className="font-bold text-slate-900 text-xs">Amitanshu V.</h4>
-                      <p className="text-[10px] text-slate-400 mt-0.5">Patient since August 2026</p>
+                      <h4 className="font-bold text-slate-900 text-[11px]">Amitanshu V.</h4>
+                      <p className="text-[9px] text-slate-400">Patient since August 2026</p>
+                    </div>
+                  </div>
+
+                  {/* Review 3 */}
+                  <div className="p-4 bg-white rounded-xl border border-slate-200 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-default relative">
+                    <p className="text-slate-655 italic text-[11px] leading-relaxed mb-2">
+                      "As an administrator, managing doctor schedules was a nightmare. With CareSync, registering new specialists is effortless, and slots are auto-seeded immediately."
+                    </p>
+                    <div>
+                      <h4 className="font-bold text-slate-900 text-[11px]">Priya P.</h4>
+                      <p className="text-[9px] text-slate-400">Admin since August 2026</p>
+                    </div>
+                  </div>
+
+                  {/* Review 4 */}
+                  <div className="p-4 bg-white rounded-xl border border-slate-200 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-default relative">
+                    <p className="text-slate-655 italic text-[11px] leading-relaxed mb-2">
+                      "The AI consultation summary is a game changer. It breaks down complex medical recommendations into simple steps so my family knows exactly what recovery routine to follow."
+                    </p>
+                    <div>
+                      <h4 className="font-bold text-slate-900 text-[11px]">Aarav S.</h4>
+                      <p className="text-[9px] text-slate-400">Patient since August 2026</p>
                     </div>
                   </div>
                 </div>
@@ -817,7 +839,7 @@ export default function App() {
             </div>
 
             {/* Thin Footer at the very bottom of Fold 2 */}
-            <footer className="bg-slate-900 text-slate-500 py-5 text-xs border-t border-slate-800 w-full mt-auto">
+            <footer className="bg-slate-900 text-slate-550 py-5 text-xs border-t border-slate-800 w-full mt-auto">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center w-full">
                 <span className="font-bold text-white text-xs">CareSync Portal</span>
                 <p className="text-slate-500 text-[10px]">CareSync Hospital Center, Clinical Drive Road, OR 97401. &copy; 2026. All rights reserved.</p>
