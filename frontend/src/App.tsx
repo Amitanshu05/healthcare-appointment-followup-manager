@@ -627,103 +627,189 @@ export default function App() {
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
       
       {!isLoggedIn && showLanding ? (
-        <div className="h-screen flex flex-col bg-white overflow-hidden justify-between select-none">
-          {/* Header */}
-          <header className="bg-white border-b border-slate-100 py-4">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center space-x-2">
-                  <Activity className="h-8 w-8 text-blue-600 animate-pulse" />
-                  <span className="text-2xl font-bold text-slate-900 tracking-tight">
-                    CareSync <span className="text-blue-600">Hospital</span>
-                  </span>
+        <div className="bg-white select-none">
+          {/* Fold 1: Main Landing Screen (Occupies exact height of the screen) */}
+          <div className="min-h-screen flex flex-col justify-between border-b border-slate-100">
+            {/* Header */}
+            <header className="bg-white border-b border-slate-100 py-4">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center space-x-2">
+                    <Activity className="h-8 w-8 text-blue-600 animate-pulse" />
+                    <span className="text-2xl font-bold text-slate-900 tracking-tight">
+                      CareSync <span className="text-blue-600">Hospital</span>
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    <button 
+                      onClick={() => { setShowLanding(false); setAuthView('login'); }}
+                      className="text-sm font-bold text-slate-600 hover:text-slate-900 transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer"
+                    >
+                      Sign In
+                    </button>
+                    <button 
+                      onClick={() => { setShowLanding(false); setAuthView('register'); }}
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-bold rounded-lg text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-all duration-250 hover:scale-105 active:scale-95 cursor-pointer hover:shadow-md"
+                    >
+                      Book Consultation
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-4">
-                  <button 
-                    onClick={() => { setShowLanding(false); setAuthView('login'); }}
-                    className="text-sm font-bold text-slate-600 hover:text-slate-900 transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer"
-                  >
-                    Sign In
-                  </button>
+              </div>
+            </header>
+
+            {/* Hero Section */}
+            <section className="flex-grow flex items-center justify-center bg-gradient-to-b from-blue-50/30 to-white py-6">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center my-auto">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-150 mb-4 animate-bounce">
+                  ✨ Smart Clinical Scheduling & AI Summaries
+                </span>
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-955 tracking-tight max-w-4xl mx-auto leading-tight">
+                  Your Health, Our Priority. <br/>
+                  <span className="text-blue-600">Fast Booking & AI Insights.</span>
+                </h1>
+                <p className="mt-4 text-base sm:text-lg text-slate-600 max-w-xl mx-auto leading-relaxed">
+                  Experience seamless specialist booking, instant Google Calendar invites with active 15-minute reminders, and automated AI care summaries.
+                </p>
+                <div className="mt-8 flex flex-col sm:flex-row justify-center items-center gap-4">
                   <button 
                     onClick={() => { setShowLanding(false); setAuthView('register'); }}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-bold rounded-lg text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-all duration-250 hover:scale-105 active:scale-95 cursor-pointer hover:shadow-md"
+                    className="w-full sm:w-auto inline-flex justify-center items-center px-8 py-3.5 border border-transparent text-base font-bold rounded-xl text-white bg-blue-600 hover:bg-blue-700 shadow-md transition-all duration-250 hover:scale-105 active:scale-95 cursor-pointer hover:shadow-lg"
                   >
-                    Book Consultation
+                    Get Started (Free Patient Sign Up)
+                  </button>
+                  <button 
+                    onClick={() => { setShowLanding(false); setAuthView('login'); }}
+                    className="w-full sm:w-auto inline-flex justify-center items-center px-8 py-3.5 border border-slate-200 text-base font-bold rounded-xl text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 transition-all duration-250 hover:scale-105 active:scale-95 cursor-pointer hover:shadow-sm"
+                  >
+                    Portal Login
                   </button>
                 </div>
               </div>
-            </div>
-          </header>
+            </section>
 
-          {/* Hero Section */}
-          <section className="flex-grow flex items-center justify-center bg-gradient-to-b from-blue-50/30 to-white py-6">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center my-auto">
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-150 mb-4 animate-bounce">
-                ✨ Smart Clinical Scheduling & AI Summaries
-              </span>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-955 tracking-tight max-w-4xl mx-auto leading-tight">
-                Your Health, Our Priority. <br/>
-                <span className="text-blue-600">Fast Booking & AI Insights.</span>
-              </h1>
-              <p className="mt-4 text-base sm:text-lg text-slate-600 max-w-xl mx-auto leading-relaxed">
-                Experience seamless specialist booking, instant Google Calendar invites with active 15-minute reminders, and automated AI care summaries.
-              </p>
-              <div className="mt-8 flex flex-col sm:flex-row justify-center items-center gap-4">
-                <button 
-                  onClick={() => { setShowLanding(false); setAuthView('register'); }}
-                  className="w-full sm:w-auto inline-flex justify-center items-center px-8 py-3.5 border border-transparent text-base font-bold rounded-xl text-white bg-blue-600 hover:bg-blue-700 shadow-md transition-all duration-250 hover:scale-105 active:scale-95 cursor-pointer hover:shadow-lg"
-                >
-                  Get Started (Free Patient Sign Up)
-                </button>
-                <button 
-                  onClick={() => { setShowLanding(false); setAuthView('login'); }}
-                  className="w-full sm:w-auto inline-flex justify-center items-center px-8 py-3.5 border border-slate-200 text-base font-bold rounded-xl text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 transition-all duration-250 hover:scale-105 active:scale-95 cursor-pointer hover:shadow-sm"
-                >
-                  Portal Login
-                </button>
+            {/* Combined Features & Stats (Compact Layout at the bottom) */}
+            <section className="bg-slate-50 border-t border-slate-100 py-6">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+                  
+                  {/* Stats col */}
+                  <div className="md:col-span-1 border-r border-slate-200 pr-6 hidden md:block">
+                    <div className="grid grid-cols-2 gap-4 text-center">
+                      <div>
+                        <p className="text-2xl font-extrabold text-slate-900">10k+</p>
+                        <p className="text-xs font-semibold text-slate-500">Patients Served</p>
+                      </div>
+                      <div>
+                        <p className="text-2xl font-extrabold text-slate-900">99.8%</p>
+                        <p className="text-xs font-semibold text-slate-500">Success Rate</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Mini Features (2 cols) */}
+                  <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex items-start space-x-3 p-3 bg-white border border-slate-150 rounded-xl hover:shadow-sm transition-shadow">
+                      <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
+                        <Calendar className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-slate-900">iCalendar Autopush</h4>
+                        <p className="text-xs text-slate-500">Google Calendar invites with active 15-minute reminders.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-3 p-3 bg-white border border-slate-150 rounded-xl hover:shadow-sm transition-shadow">
+                      <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
+                        <Activity className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-slate-900">AI Care Summaries</h4>
+                        <p className="text-xs text-slate-500">Prescription insights parsed dynamically for patients.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+          </div>
 
-          {/* Combined Features & Stats (Compact Layout at the bottom) */}
-          <section className="bg-slate-50 border-t border-slate-100 py-6">
+          {/* Fold 2: Reassurance & Core Benefits */}
+          <section className="py-20 bg-slate-50 border-b border-slate-100">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+              <div className="text-center mb-16">
+                <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-950">Why Patients Trust CareSync</h2>
+                <p className="mt-4 text-slate-600 max-w-xl mx-auto font-medium">We coordinate your clinical journey so you can focus on healing.</p>
+              </div>
+
+              <div className="grid md:grid-cols-3 gap-8">
                 
-                {/* Stats col */}
-                <div className="md:col-span-1 border-r border-slate-200 pr-6 hidden md:block">
-                  <div className="grid grid-cols-2 gap-4 text-center">
-                    <div>
-                      <p className="text-2xl font-extrabold text-slate-900">10k+</p>
-                      <p className="text-xs font-semibold text-slate-500">Patients Served</p>
-                    </div>
-                    <div>
-                      <p className="text-2xl font-extrabold text-slate-900">99.8%</p>
-                      <p className="text-xs font-semibold text-slate-500">Success Rate</p>
-                    </div>
+                {/* Benefit 1 */}
+                <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
+                  <div className="h-12 w-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-6">
+                    <User className="h-6 w-6" />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900 mb-2">Expert Doctor Guidance</h3>
+                  <p className="text-sm text-slate-600 leading-relaxed">
+                    Our verified hospital specialists provide tailored diagnostic reviews and follow-up prescription advice directly to your portal profile.
+                  </p>
+                </div>
+
+                {/* Benefit 2 */}
+                <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
+                  <div className="h-12 w-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-6">
+                    <Clock className="h-6 w-6" />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900 mb-2">Automated Sync & Reminders</h3>
+                  <p className="text-sm text-slate-600 leading-relaxed">
+                    Zero manual sync required. Every booking pushes an active iCalendar invite with 15-minute phone notifications directly to your Google Calendar.
+                  </p>
+                </div>
+
+                {/* Benefit 3 */}
+                <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
+                  <div className="h-12 w-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-6">
+                    <Activity className="h-6 w-6" />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900 mb-2">Dynamic AI Insights</h3>
+                  <p className="text-sm text-slate-600 leading-relaxed">
+                    Get clinical summaries parsed automatically from consultation notes to help you and your family understand the care instructions clearly.
+                  </p>
+                </div>
+
+              </div>
+            </div>
+          </section>
+
+          {/* Testimonials / Patient Reviews */}
+          <section className="py-20 bg-white">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="text-center mb-16">
+                <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-955">Patient Reviews & Success Stories</h2>
+                <p className="mt-4 text-slate-600 max-w-xl mx-auto font-medium">Read about the experience of patients who schedule through CareSync.</p>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-8">
+                
+                {/* Review 1 */}
+                <div className="p-8 bg-slate-50 rounded-2xl border border-slate-150 relative">
+                  <p className="text-slate-600 italic text-sm leading-relaxed mb-6">
+                    "CareSync has completely simplified my consultation bookings. The automatic calendar invite landed in my inbox in 2 seconds, and the 15-minute pop-up reminder was absolutely perfect!"
+                  </p>
+                  <div>
+                    <h4 className="font-bold text-slate-900 text-sm">Sanskar S.</h4>
+                    <p className="text-xs text-slate-500 mt-0.5">Patient since August 2026</p>
                   </div>
                 </div>
 
-                {/* Mini Features (2 cols) */}
-                <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="flex items-start space-x-3 p-3 bg-white border border-slate-150 rounded-xl hover:shadow-sm transition-shadow">
-                    <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
-                      <Calendar className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-bold text-slate-900">iCalendar Autopush</h4>
-                      <p className="text-xs text-slate-500">Google Calendar invites with active 15-minute reminders.</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-3 p-3 bg-white border border-slate-150 rounded-xl hover:shadow-sm transition-shadow">
-                    <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
-                      <Activity className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-bold text-slate-900">AI Care Summaries</h4>
-                      <p className="text-xs text-slate-500">Prescription insights parsed dynamically for patients.</p>
-                    </div>
+                {/* Review 2 */}
+                <div className="p-8 bg-slate-50 rounded-2xl border border-slate-150 relative">
+                  <p className="text-slate-600 italic text-sm leading-relaxed mb-6">
+                    "I was always anxious about missing doctor timings, but the real-time slot seeder and active calendar email reminders keep me perfectly aligned. The UI is incredibly clean and fast!"
+                  </p>
+                  <div>
+                    <h4 className="font-bold text-slate-900 text-sm">Amitanshu V.</h4>
+                    <p className="text-xs text-slate-500 mt-0.5">Patient since August 2026</p>
                   </div>
                 </div>
 
@@ -731,11 +817,11 @@ export default function App() {
             </div>
           </section>
 
-          {/* Footer (Very thin) */}
-          <footer className="bg-slate-900 text-slate-500 py-3 text-xs border-t border-slate-800">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-              <span className="font-bold text-slate-400">CareSync Portal</span>
-              <p>CareSync Hospital Center, OR 97401. &copy; 2026. All rights reserved.</p>
+          {/* Thin Footer at the very bottom */}
+          <footer className="bg-slate-900 text-slate-500 py-8 text-xs border-t border-slate-800">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+              <span className="font-bold text-white text-sm">CareSync Hospital Portal</span>
+              <p className="text-slate-500">CareSync Hospital Center, Clinical Drive Road, OR 97401. &copy; 2026. All rights reserved.</p>
             </div>
           </footer>
         </div>
