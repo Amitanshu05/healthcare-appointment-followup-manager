@@ -801,6 +801,12 @@ export default function App() {
         {!isLoggedIn && authView === 'login' && (
           <div className="sm:mx-auto sm:w-full sm:max-w-md my-auto">
             <div className="text-center mb-6">
+              <button 
+                onClick={() => setShowLanding(true)}
+                className="inline-flex items-center text-xs font-bold text-slate-500 hover:text-blue-600 mb-2 transition-colors"
+              >
+                ← Back to Home
+              </button>
               <h2 className="text-3xl font-extrabold text-slate-900">Sign in to Hospital Portal</h2>
               <p className="mt-2 text-sm text-slate-600">
                 Or{' '}
@@ -885,6 +891,12 @@ export default function App() {
         {!isLoggedIn && authView === 'register' && (
           <div className="sm:mx-auto sm:w-full sm:max-w-md my-auto">
             <div className="text-center mb-6">
+              <button 
+                onClick={() => setShowLanding(true)}
+                className="inline-flex items-center text-xs font-bold text-slate-500 hover:text-blue-600 mb-2 transition-colors"
+              >
+                ← Back to Home
+              </button>
               <h2 className="text-3xl font-extrabold text-slate-900">Create Patient Profile</h2>
               <p className="mt-2 text-sm text-slate-600">
                 Or{' '}
@@ -993,6 +1005,12 @@ export default function App() {
         {!isLoggedIn && authView === 'forgot' && (
           <div className="sm:mx-auto sm:w-full sm:max-w-md my-auto">
             <div className="text-center mb-6">
+              <button 
+                onClick={() => setShowLanding(true)}
+                className="inline-flex items-center text-xs font-bold text-slate-500 hover:text-blue-600 mb-2 transition-colors"
+              >
+                ← Back to Home
+              </button>
               <h2 className="text-3xl font-extrabold text-slate-900">Reset Account Password</h2>
               <p className="mt-2 text-sm text-slate-600">
                 Or{' '}
